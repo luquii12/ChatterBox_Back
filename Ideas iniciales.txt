@@ -1,0 +1,31 @@
+Requisitos funcionales:
+- 1 chat de texto en tiempo real entre los usuarios por grupo (ampliar a más en el futuro)
+- Grupos de chat de texto, públicos y privados
+- Crear nuevos grupos
+- Tener distintos roles
+- Un administrador del grupo que puede invitar y echar a los usuarios
+
+Requisitos técnicos:
+- Spring Security
+- WebSocket (Para los chat) + Stomp y SockJS (Front)
+- Spring Boot
+- React
+- Tailwind
+- HTML
+- Lombok
+- MySQL / H2
+- React Router
+- ¿JWT?
+- JUnit + Mockito
+- React Testing Library
+- Axios
+- Vite
+
+
+Consulta de ChatGPT (Controlar acceso a los grupos privados)
+https://chatgpt.com/share/67e51d9a-5e0c-800a-80a4-c17f6f9a9caf
+
+Si el usuario no está en el grupo al que intenta acceder hay dos casos:
+* Grupo público: aparece un mensaje de que no se encuentra en el grupo y las opciones de ir a inicio o unirse al grupo
+* Grupo privado: aparece un mensaje de que no se encuentra en el grupo y que para poder unirse a él necesita que le inviten al grupo
+
