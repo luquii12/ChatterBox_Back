@@ -6,7 +6,7 @@ Requisitos funcionales:
 - Un administrador del grupo que puede invitar y echar a los usuarios
 
 Requisitos técnicos:
-- Spring Security
+- Spring Security + JWT (https://openwebinars.net/academia/portada/seguridad-api-rest-spring-boot/ + vídeos)
 - WebSocket (Para los chat) + Stomp y SockJS (Front)
 - Spring Boot
 - React
@@ -15,7 +15,6 @@ Requisitos técnicos:
 - Lombok
 - MySQL / H2
 - React Router
-- ¿JWT?
 - JUnit + Mockito
 - React Testing Library
 - Axios
