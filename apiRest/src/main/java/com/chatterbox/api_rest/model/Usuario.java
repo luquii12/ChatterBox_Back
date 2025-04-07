@@ -27,8 +27,8 @@ public class Usuario {
     private String hashPassword;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Mensaje> mensajes = new ArrayList<>(); // Revisar los List si pasarlo a Set
+    private List<Mensaje> mensajes = new ArrayList<>();
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UsuarioGrupo> grupos = new HashSet<>();
+    private List<UsuarioGrupo> grupos = new ArrayList<>();
 }

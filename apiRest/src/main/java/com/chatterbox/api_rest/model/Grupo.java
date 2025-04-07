@@ -28,5 +28,5 @@ public class Grupo {
     private List<Mensaje> mensajes = new ArrayList<>();
 
     @OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UsuarioGrupo> usuarios = new HashSet<>();
+    private List<UsuarioGrupo> usuarios = new ArrayList<>();
 }

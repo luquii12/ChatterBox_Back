@@ -13,17 +13,18 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "usuario_grupo")
 public class UsuarioGrupo {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private boolean esAdmin; // Preguntar cómo se guarda en la bd
-//    private LocalDate fechaInscripcion; // Hablarlo antes de añadirlo
+    @EmbeddedId
+    private UsuarioGrupoId id;
+    private boolean esAdmin;
+    private LocalDate fechaInscripcion;
 
     @ManyToOne
+    @MapsId("idUsuario")
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
     @ManyToOne
+    @MapsId("idGrupo")
     @JoinColumn(name = "id_grupo")
     private Grupo grupo;
 }
