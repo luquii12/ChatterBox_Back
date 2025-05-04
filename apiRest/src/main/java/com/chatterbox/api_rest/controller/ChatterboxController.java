@@ -1,13 +1,12 @@
 package com.chatterbox.api_rest.controller;
 
-import com.chatterbox.api_rest.model.UsuarioGrupo;
+import com.chatterbox.api_rest.dto.LoginDto;
+import com.chatterbox.api_rest.dto.UsuarioDto;
 import com.chatterbox.api_rest.service.ChatterboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,32 +14,37 @@ import java.util.List;
 public class ChatterboxController {
     private final ChatterboxService chatterboxService;
 
-    // Falta determinar el tipo de mapping que van a ser los métodos
-    // Los GetMapping pueden pasar a PostMapping si vienen de un formulario
-    @GetMapping("/usuarios/{idUsuario}")
-    public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable int idUsuario) {
+    @PostMapping("/auth/login")
+    public ResponseEntity<?> autenticarUsuario(@RequestBody LoginDto loginDto) {
+        return chatterboxService.login(loginDto);
+    }
+
+    @PostMapping("/usuarios/registrar")
+    public ResponseEntity<?> registrarUsuario(@RequestBody UsuarioDto usuarioDto) {
+//        return chatterboxService.signUp();
         return null;
     }
 
-    // ¿RequestBody en vez de RequestParam?
-    @PostMapping("/usuarios/buscar")
-    public ResponseEntity<?> obtenerUsuarioPorNombreYApellidos(@RequestParam String nombre, @RequestParam String apellidos) {
-        return null;
+    // Falta determinar el tipo de mapping que van a ser los métodos
+    // Los GetMapping pueden pasar a PostMapping si vienen de un formulario
+    @GetMapping("/usuarios/{idUsuario}")
+    public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable Long idUsuario) {
+        return chatterboxService.getUsuarioById(idUsuario);
     }
 
     // Opcional: Añadir paginación en el futuro para controlarlos mejor
     @GetMapping("/usuarios/{idUsuario}/mensajes")
-    public ResponseEntity<?> obtenerMensajesDeUnUsuario(@PathVariable int idUsuario) {
+    public ResponseEntity<?> obtenerMensajesDeUnUsuario(@PathVariable Long idUsuario) {
         return null;
     }
 
     @GetMapping("/usuarios/{idUsuario}/grupos")
-    public ResponseEntity<?> obtenerGruposPorUsuario(@PathVariable int idUsuario) {
+    public ResponseEntity<?> obtenerGruposPorUsuario(@PathVariable Long idUsuario) {
         return null;
     }
 
     @GetMapping("/grupos/{idGrupo}")
-    public ResponseEntity<?> obtenerGrupoPorId(@PathVariable int idGrupo) {
+    public ResponseEntity<?> obtenerGrupoPorId(@PathVariable Long idGrupo) {
         return null;
     }
 
@@ -50,28 +54,28 @@ public class ChatterboxController {
     }
 
     @GetMapping("/grupos/{idGrupo}/usuarios")
-    public ResponseEntity<?> obtenerUsuariosDeUnGrupo(@PathVariable int idGrupo) {
+    public ResponseEntity<?> obtenerUsuariosDeUnGrupo(@PathVariable Long idGrupo) {
         return null;
     }
 
     @GetMapping("/grupos/{idGrupo}/administradores")
-    public ResponseEntity<?> obtenerAdministradoresDeUnGrupo(@PathVariable int idGrupo) {
+    public ResponseEntity<?> obtenerAdministradoresDeUnGrupo(@PathVariable Long idGrupo) {
         return null;
     }
 
     // Opcional: Añadir paginación en el futuro para controlarlos mejor
     @GetMapping("/grupos/{idGrupo}/mensajes")
-    public ResponseEntity<?> obtenerMensajesDeUnGrupo(@PathVariable int idGrupo) {
+    public ResponseEntity<?> obtenerMensajesDeUnGrupo(@PathVariable Long idGrupo) {
         return null;
     }
 
     @GetMapping("/grupos/{idGrupo}/usuarios/{idUsuario}/mensajes")
-    public ResponseEntity<?> obtenerMensajesDeUnUsuarioEnUnGrupo(@PathVariable int idGrupo, @PathVariable int idUsuario) {
+    public ResponseEntity<?> obtenerMensajesDeUnUsuarioEnUnGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
         return null;
     }
 
     @GetMapping("/mensajes/{idMensaje}")
-    public ResponseEntity<?> obtenerMensajePorId(@PathVariable int idMensaje) {
+    public ResponseEntity<?> obtenerMensajePorId(@PathVariable Long idMensaje) {
         return null;
     }
 }

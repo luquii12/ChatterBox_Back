@@ -1,103 +1,87 @@
-#  Repasar las tablas y modificar lo necesario
-/*
-Mejorar la BD: ¿Nulos y no nulos? ¿Campos Unique?
-(Para pasar de Hibernate a MySQL)
-https://chatgpt.com/c/67f38b12-4190-800a-bb9c-938ef0557260
-*/
-create table grupo
+# Tabla usuarios
+DROP TABLE IF EXISTS usuarios;
+CREATE TABLE usuarios
 (
-    id_grupo     bigint not null auto_increment,
-    descripcion  varchar(255),
-    nombre_grupo varchar(255),
-    primary key (id_grupo)
-) engine = InnoDB;
+    id_usuario       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    apodo            VARCHAR(255) UNIQUE NOT NULL,
+    nombre_usuario   VARCHAR(255)        NOT NULL, -- Por ahora no lo vamos a usar. En el futuro puede que sí
+    email            VARCHAR(255) UNIQUE NOT NULL,
+    hash_password    VARCHAR(255)        NOT NULL,
+    es_admin_general BOOLEAN             NOT NULL DEFAULT FALSE,
+    foto_perfil      VARCHAR(255)                  -- Opcional para el futuro: se guarda solo la url de donde se encuentra
+);
 
-create table mensaje
+
+# Tabla grupos
+DROP TABLE IF EXISTS grupos;
+CREATE TABLE grupos
 (
-    hora_envio datetime(6),
-    id_grupo   bigint,
-    id_mensaje bigint not null auto_increment,
-    id_usuario bigint,
-    contenido  varchar(255),
-    primary key (id_mensaje)
-) engine = InnoDB;
+    id_grupo           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario_creador BIGINT       NOT NULL,
+    descripcion        VARCHAR(255),
+    nombre_grupo       VARCHAR(255) NOT NULL,
+    es_privado         BOOLEAN      NOT NULL DEFAULT FALSE,
+    foto_grupo         VARCHAR(255), -- Opcional para el futuro: se guarda solo la url de donde se encuentra
+    CONSTRAINT fk_grupos_usuarios_creadores FOREIGN KEY (id_usuario_creador) REFERENCES usuarios (id_usuario) ON DELETE CASCADE
+);
 
-create table usuario
+-- Un mismo usuario no puede repetir el nombre del grupo
+CREATE UNIQUE INDEX idx_grupos_nombre_usuario ON grupos (nombre_grupo, id_usuario_creador);
+
+-- Índice para mejorar rendimiento al listar grupos creados por un usuario
+CREATE INDEX idx_grupos_id_usuario_creador ON grupos (id_usuario_creador);
+
+
+# Tabla chats
+DROP TABLE IF EXISTS chats;
+CREATE TABLE chats
 (
-    id_usuario     bigint not null auto_increment,
-    apellidos      varchar(255),
-    email          varchar(255),
-    hash_password  varchar(255),
-    nombre_usuario varchar(255),
-    primary key (id_usuario)
-) engine = InnoDB;
+    id_chat        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_grupo       BIGINT       NOT NULL,
+    nombre_chat    VARCHAR(255) NOT NULL,
+    fecha_creacion DATETIME     NOT NULL,
+    CONSTRAINT fk_chat_grupos FOREIGN KEY (id_grupo) REFERENCES grupos (id_grupo) ON DELETE CASCADE
+);
 
-create table usuario_grupo
+CREATE INDEX idx_chats_id_grupo ON chats (id_grupo);
+
+-- No pueden existir chats con el mismo nombre en un grupo
+CREATE UNIQUE INDEX idx_chats_nombre_grupo ON chats (nombre_chat, id_grupo);
+
+
+# Tabla mensajes
+DROP TABLE IF EXISTS mensajes;
+CREATE TABLE mensajes
 (
-    es_admin          bit    not null,
-    fecha_inscripcion date,
-    id_grupo          bigint not null,
-    id_usuario        bigint not null,
-    primary key (id_grupo, id_usuario)
-) engine = InnoDB;
+    id_mensaje BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario BIGINT      NOT NULL,
+    id_chat    BIGINT      NOT NULL,
+    hora_envio DATETIME(3) NOT NULL,
+    contenido  TEXT        NOT NULL,
+    CONSTRAINT fk_mensajes_usuarios FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario) ON DELETE CASCADE,
+    CONSTRAINT fk_mensajes_chats FOREIGN KEY (id_chat) REFERENCES chats (id_chat) ON DELETE CASCADE
+);
 
-alter table mensaje
-    add constraint FKje73ixodwnt01r70qqvvm41k9 foreign key (id_grupo) references grupo (id_grupo);
+CREATE INDEX idx_mensajes_id_usuario ON mensajes (id_usuario);
 
-alter table mensaje
-    add constraint FKdic7ewqu7vimup6dp2hbu8x5e foreign key (id_usuario) references usuario (id_usuario);
+CREATE INDEX idx_mensajes_id_chat_hora_envio ON mensajes (id_chat, hora_envio);
 
-alter table usuario_grupo
-    add constraint FKcu6om65mvqr6ct95ijgqgx7ww foreign key (id_grupo) references grupo (id_grupo);
 
-alter table usuario_grupo
-    add constraint FK9huj1upwjyabwkwnpnhnernnu foreign key (id_usuario) references usuario (id_usuario);
-
-create table grupo
+# Tabla usuarios_grupos
+DROP TABLE IF EXISTS usuarios_grupos;
+CREATE TABLE usuarios_grupos
 (
-    id_grupo     bigint not null auto_increment,
-    descripcion  varchar(255),
-    nombre_grupo varchar(255),
-    primary key (id_grupo)
-) engine = InnoDB;
+    id_usuario        BIGINT   NOT NULL,
+    id_grupo          BIGINT   NOT NULL,
+    es_admin_grupo    BOOLEAN  NOT NULL DEFAULT FALSE,
+    fecha_inscripcion DATETIME NOT NULL,
+    PRIMARY KEY (id_usuario, id_grupo),
+    CONSTRAINT fk_usuarios_grupos_usuarios FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario) ON DELETE CASCADE,
+    CONSTRAINT fk_usuarios_grupos_grupos FOREIGN KEY (id_grupo) REFERENCES grupos (id_grupo) ON DELETE CASCADE
+);
 
-create table mensaje
-(
-    hora_envio datetime(6),
-    id_grupo   bigint,
-    id_mensaje bigint not null auto_increment,
-    id_usuario bigint,
-    contenido  varchar(255),
-    primary key (id_mensaje)
-) engine = InnoDB;
+CREATE INDEX idx_usuarios_grupos_id_grupo_usuario ON usuarios_grupos (id_grupo, id_usuario);
 
-create table usuario
-(
-    id_usuario     bigint not null auto_increment,
-    apellidos      varchar(255),
-    email          varchar(255),
-    hash_password  varchar(255),
-    nombre_usuario varchar(255),
-    primary key (id_usuario)
-) engine = InnoDB;
+CREATE INDEX idx_usuarios_grupos_id_usuario ON usuarios_grupos (id_usuario);
 
-create table usuario_grupo
-(
-    es_admin          bit    not null,
-    fecha_inscripcion date,
-    id_grupo          bigint not null,
-    id_usuario        bigint not null,
-    primary key (id_grupo, id_usuario)
-) engine = InnoDB;
-
-alter table mensaje
-    add constraint FKje73ixodwnt01r70qqvvm41k9 foreign key (id_grupo) references grupo (id_grupo);
-
-alter table mensaje
-    add constraint FKdic7ewqu7vimup6dp2hbu8x5e foreign key (id_usuario) references usuario (id_usuario);
-
-alter table usuario_grupo
-    add constraint FKcu6om65mvqr6ct95ijgqgx7ww foreign key (id_grupo) references grupo (id_grupo);
-
-alter table usuario_grupo
-    add constraint FK9huj1upwjyabwkwnpnhnernnu foreign key (id_usuario) references usuario (id_usuario);
+CREATE INDEX idx_usuarios_grupos_id_grupo ON usuarios_grupos (id_grupo);
