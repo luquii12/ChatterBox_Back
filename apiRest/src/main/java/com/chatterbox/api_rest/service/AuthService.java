@@ -5,6 +5,7 @@ import com.chatterbox.api_rest.dto.UsuarioBdDto;
 import com.chatterbox.api_rest.dto.UsuarioRequestDto;
 import com.chatterbox.api_rest.dto.UsuarioResponseDto;
 import com.chatterbox.api_rest.repository.ChatterboxRepository;
+import com.chatterbox.api_rest.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,9 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -22,25 +21,37 @@ import java.util.Optional;
 public class AuthService {
     private final ChatterboxRepository chatterboxRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     public ResponseEntity<?> login(LoginDto login) {
         if (!usuarioLoginValido(login)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Email y contraseña son requeridos");
+                    .body("Credenciales inválidas");
         }
 
         try {
             Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioByEmail(login.getEmail());
-            if (usuarioOptional.isPresent()) {
-                UsuarioBdDto usuario = usuarioOptional.get();
-                if (passwordEncoder.matches(login.getPassword(), usuario.getHash_password())) {
-                    return ResponseEntity.ok(transformarUsuarioBdDtoAUsuarioResponseDto(usuario));
-                }
+            if (usuarioOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            UsuarioBdDto usuarioBd = usuarioOptional.get();
+
+            if (!passwordEncoder.matches(login.getPassword(), usuarioBd.getHash_password())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Contraseña incorrecta");
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Usuario no encontrado");
+
+            String token = jwtUtil.generateToken(usuarioBd);
+
+            UsuarioResponseDto usuarioResponse = transformarUsuarioBdDtoAUsuarioResponseDto(usuarioBd);
+
+            Map<String, Object> respuesta = new HashMap<>();
+            respuesta.put("usuario", usuarioResponse);
+            respuesta.put("token", token);
+
+            return ResponseEntity.ok(respuesta);
         } catch (Exception e) {
             log.error("Error inesperado durante el login", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -58,13 +69,7 @@ public class AuthService {
             Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioByApodoOrEmail(nuevoUsuario.getApodo(), nuevoUsuario.getEmail());
             if (usuarioOptional.isEmpty()) {
                 Long id = chatterboxRepository.insertUser(nuevoUsuario);
-                /*
-                Map<String, Object> respuesta = new HashMap<>();
-                respuesta.put("usuario", transformarUsuarioDtoAUsuarioSinPasswordDto(usuarioInsertado));
-                respuesta.put("token", tokenJWT);
 
-                return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
-                 */
                 return ResponseEntity.status(HttpStatus.CREATED)
                         .body(transformarUsuarioRequestDtoAUsuarioResponseDto(id, nuevoUsuario));
             }

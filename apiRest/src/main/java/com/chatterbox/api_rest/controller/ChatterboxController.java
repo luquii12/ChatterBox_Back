@@ -63,4 +63,6 @@ public class ChatterboxController {
     public ResponseEntity<?> obtenerMensajePorId(@PathVariable Long idMensaje) {
         return null;
     }
+
+    // Faltan los endpoints correspondientes a los chats y a los admins generales y de grupo
 }
