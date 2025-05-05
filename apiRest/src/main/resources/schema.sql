@@ -1,5 +1,17 @@
-# Tabla usuarios
+-- Desactivar restricciones de FK --> ¡SOLO PARA DESARROLLO!
+SET FOREIGN_KEY_CHECKS = 0;
+
+# Eliminar tablas si existen
 DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS grupos;
+DROP TABLE IF EXISTS chats;
+DROP TABLE IF EXISTS mensajes;
+DROP TABLE IF EXISTS usuarios_grupos;
+
+-- Activar restricciones de FK de nuevo --> ¡SOLO PARA DESARROLLO!
+SET FOREIGN_KEY_CHECKS = 1;
+
+# Tabla usuarios
 CREATE TABLE usuarios
 (
     id_usuario       BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -13,7 +25,6 @@ CREATE TABLE usuarios
 
 
 # Tabla grupos
-DROP TABLE IF EXISTS grupos;
 CREATE TABLE grupos
 (
     id_grupo           BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -33,7 +44,6 @@ CREATE INDEX idx_grupos_id_usuario_creador ON grupos (id_usuario_creador);
 
 
 # Tabla chats
-DROP TABLE IF EXISTS chats;
 CREATE TABLE chats
 (
     id_chat        BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -50,7 +60,6 @@ CREATE UNIQUE INDEX idx_chats_nombre_grupo ON chats (nombre_chat, id_grupo);
 
 
 # Tabla mensajes
-DROP TABLE IF EXISTS mensajes;
 CREATE TABLE mensajes
 (
     id_mensaje BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -68,7 +77,6 @@ CREATE INDEX idx_mensajes_id_chat_hora_envio ON mensajes (id_chat, hora_envio);
 
 
 # Tabla usuarios_grupos
-DROP TABLE IF EXISTS usuarios_grupos;
 CREATE TABLE usuarios_grupos
 (
     id_usuario        BIGINT   NOT NULL,
@@ -79,8 +87,6 @@ CREATE TABLE usuarios_grupos
     CONSTRAINT fk_usuarios_grupos_usuarios FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario) ON DELETE CASCADE,
     CONSTRAINT fk_usuarios_grupos_grupos FOREIGN KEY (id_grupo) REFERENCES grupos (id_grupo) ON DELETE CASCADE
 );
-
-CREATE INDEX idx_usuarios_grupos_id_grupo_usuario ON usuarios_grupos (id_grupo, id_usuario);
 
 CREATE INDEX idx_usuarios_grupos_id_usuario ON usuarios_grupos (id_usuario);
 

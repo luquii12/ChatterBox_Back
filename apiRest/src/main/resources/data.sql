@@ -33,13 +33,13 @@ VALUES (1, 1, NOW(3), '¡Hola a todos en DevTalks!'),
        (3, 4, NOW(3), 'Estoy trabajando en un proyecto de visión artificial.');
 
 -- Eliminar datos en orden inverso a las dependencias
-DELETE
-FROM mensajes;
-DELETE
-FROM usuarios_grupos;
-DELETE
-FROM chats;
-DELETE
-FROM grupos;
-DELETE
-FROM usuarios;
+# DELETE
+# FROM mensajes;
+# DELETE
+# FROM usuarios_grupos;
+# DELETE
+# FROM chats;
+# DELETE
+# FROM grupos;
+# DELETE
+# FROM usuarios;

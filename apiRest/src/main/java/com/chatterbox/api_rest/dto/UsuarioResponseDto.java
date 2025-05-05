@@ -9,12 +9,11 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class UsuarioDto {
+public class UsuarioResponseDto {
     private Long id_usuario;
     private String apodo;
     private String nombre_usuario;
     private String email;
-    private String hash_password;
     private boolean es_admin_general;
     private String foto_perfil;
 }

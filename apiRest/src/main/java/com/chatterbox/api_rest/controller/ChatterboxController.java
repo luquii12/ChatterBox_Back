@@ -1,29 +1,14 @@
 package com.chatterbox.api_rest.controller;
 
-import com.chatterbox.api_rest.dto.LoginDto;
-import com.chatterbox.api_rest.dto.UsuarioDto;
 import com.chatterbox.api_rest.service.ChatterboxService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@Slf4j
 public class ChatterboxController {
     private final ChatterboxService chatterboxService;
-
-    @PostMapping("/auth/login")
-    public ResponseEntity<?> autenticarUsuario(@RequestBody LoginDto loginDto) {
-        return chatterboxService.login(loginDto);
-    }
-
-    @PostMapping("/usuarios/registrar")
-    public ResponseEntity<?> registrarUsuario(@RequestBody UsuarioDto usuarioDto) {
-//        return chatterboxService.signUp();
-        return null;
-    }
 
     // Falta determinar el tipo de mapping que van a ser los métodos
     // Los GetMapping pueden pasar a PostMapping si vienen de un formulario

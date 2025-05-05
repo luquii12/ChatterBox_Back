@@ -2,3 +2,5 @@ Versiones:
 - Tailwind: 4.1
 - React: 19.0.0
 - Spring Boot: 3.4.4
+- Java: 21
+- MySQL: 8.0.41
