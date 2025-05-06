@@ -1,23 +1,18 @@
 package com.chatterbox.api_rest.repository;
 
+import com.chatterbox.api_rest.dto.GrupoDto;
 import com.chatterbox.api_rest.dto.UsuarioBdDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
 @Repository
 public class ChatterboxRepository {
     private final JdbcClient jdbcClient;
-
-    public Optional<UsuarioBdDto> findUsuarioById(Long idUsuario) {
-        return jdbcClient.sql("SELECT * FROM usuarios WHERE id_usuario = ?")
-                .param(1, idUsuario)
-                .query(UsuarioBdDto.class)
-                .optional();
-    }
 
     public Optional<UsuarioBdDto> findUsuarioByEmail(String email) {
         return jdbcClient.sql("SELECT * FROM usuarios WHERE email = ?")
@@ -46,5 +41,19 @@ public class ChatterboxRepository {
                 .param(1, nuevoUsuario.getEmail())
                 .query(Long.class)
                 .single();
+    }
+
+    public Optional<UsuarioBdDto> findUsuarioById(Long idUsuario) {
+        return jdbcClient.sql("SELECT * FROM usuarios WHERE id_usuario = ?")
+                .param(1, idUsuario)
+                .query(UsuarioBdDto.class)
+                .optional();
+    }
+
+    public List<GrupoDto> findGruposByUsuarioId(Long idUsuario) {
+        // Consulta a usuarios_grupos para obtener ids grupos y si el usuario es admin de él
+        // y luego consulta a grupos para obtener la info de cada grupo
+        //        return jdbcClient.sql("SELECT * FROM usuarios_grupos WHERE ")
+        return null;
     }
 }

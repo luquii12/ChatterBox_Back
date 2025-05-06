@@ -11,8 +11,7 @@ public class ChatterboxController {
     private final ChatterboxService chatterboxService;
 
     // Falta determinar el tipo de mapping que van a ser los métodos
-    // Los GetMapping pueden pasar a PostMapping si vienen de un formulario
-    @GetMapping("/usuarios/{idUsuario}")
+    @GetMapping("/usuarios/{idUsuario}") // No sé si lo necesito
     public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable Long idUsuario) {
         return chatterboxService.getUsuarioById(idUsuario);
     }
@@ -24,8 +23,8 @@ public class ChatterboxController {
     }
 
     @GetMapping("/usuarios/{idUsuario}/grupos")
-    public ResponseEntity<?> obtenerGruposPorUsuario(@PathVariable Long idUsuario) {
-        return null;
+    public ResponseEntity<?> obtenerGruposDeUnUsuario(@PathVariable Long idUsuario) {
+        return chatterboxService.obtenerGruposDeUnUsuario(idUsuario);
     }
 
     @GetMapping("/grupos/{idGrupo}")

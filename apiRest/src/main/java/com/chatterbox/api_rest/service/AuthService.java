@@ -26,7 +26,6 @@ public class AuthService {
     private final ModelMapper modelMapper;
 
     public ResponseEntity<?> login(LoginDto login) {
-        System.out.println("Contraseña cifrada: " + passwordEncoder.encode("1234"));
         if (!usuarioLoginValido(login)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Credenciales inválidas");
