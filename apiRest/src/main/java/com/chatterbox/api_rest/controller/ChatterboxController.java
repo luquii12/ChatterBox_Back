@@ -37,6 +37,7 @@ public class ChatterboxController {
         return null;
     }
 
+    // Opcional: Añadir paginación en el futuro para controlarlos mejor
     @GetMapping("/grupos/{idGrupo}/usuarios")
     public ResponseEntity<?> obtenerUsuariosDeUnGrupo(@PathVariable Long idGrupo) {
         return null;
@@ -47,15 +48,20 @@ public class ChatterboxController {
         return null;
     }
 
-    // Opcional: Añadir paginación en el futuro para controlarlos mejor
-    @GetMapping("/grupos/{idGrupo}/mensajes")
-    public ResponseEntity<?> obtenerMensajesDeUnGrupo(@PathVariable Long idGrupo) {
-        return null;
+    @GetMapping("/grupos/{idGrupo}/chats")
+    public ResponseEntity<?> obtenerChatsDeUnGrupo(@PathVariable Long idGrupo) {
+        return chatterboxService.obtenerChatsDeUnGrupo(idGrupo);
     }
 
+    // Puede que sea de chats y no grupos
     @GetMapping("/grupos/{idGrupo}/usuarios/{idUsuario}/mensajes")
     public ResponseEntity<?> obtenerMensajesDeUnUsuarioEnUnGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
         return null;
+    }
+
+    @GetMapping("/chats/{idChat}/mensajes")
+    public ResponseEntity<?> obtenerMensajesDeUnChat(@PathVariable Long idChat) {
+        return chatterboxService.obtenerMensajesDeUnChat(idChat);
     }
 
     @GetMapping("/mensajes/{idMensaje}")

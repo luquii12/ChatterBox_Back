@@ -1,7 +1,6 @@
 package com.chatterbox.api_rest.service;
 
-import com.chatterbox.api_rest.dto.GrupoDto;
-import com.chatterbox.api_rest.dto.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.*;
 import com.chatterbox.api_rest.repository.ChatterboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +36,51 @@ public class ChatterboxService {
         try {
             Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioById(idUsuario);
             if (usuarioOptional.isPresent()) {
-                List<GrupoDto> gruposUsuario = chatterboxRepository.findGruposByUsuarioId(idUsuario);
+                List<GrupoUsuarioDto> gruposUsuario = chatterboxRepository.findGruposByUsuarioIdOrderByFechaInscripcion(idUsuario);
+                if (!gruposUsuario.isEmpty()) {
+                    return ResponseEntity.ok(gruposUsuario);
+                }
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("No existe el usuario buscado");
         } catch (Exception e) {
             log.error("Error al obtener los grupos del usuario con id {}", idUsuario);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    public ResponseEntity<?> obtenerChatsDeUnGrupo(Long idGrupo) {
+        try {
+            Optional<GrupoDto> grupoOptional = chatterboxRepository.findGrupoById(idGrupo);
+            if (grupoOptional.isPresent()) {
+                List<GrupoChatDto> chatsGrupo = chatterboxRepository.findChatsByGrupoIdOrderByFechaCreacion(idGrupo);
+                if (!chatsGrupo.isEmpty()) {
+                    return ResponseEntity.ok(chatsGrupo);
+                }
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el grupo buscado");
+        } catch (Exception e) {
+            log.error("Error al obtener los chats del grupo con id {}", idGrupo);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    public ResponseEntity<?> obtenerMensajesDeUnChat(Long idChat) {
+        try {
+            Optional<ChatDto> grupoOptional = chatterboxRepository.findChatById(idChat);
+            if (grupoOptional.isPresent()) {
+                List<ChatMensajeDto> mensajesChat = chatterboxRepository.findMensajesByChatIdOrderByHoraEnvio(idChat);
+                if (!mensajesChat.isEmpty()) {
+                    return ResponseEntity.ok(mensajesChat);
+                }
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el chat buscado");
+        } catch (Exception e) {
+            log.error("Error al obtener los mensajes del chat con id {}", idChat);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
