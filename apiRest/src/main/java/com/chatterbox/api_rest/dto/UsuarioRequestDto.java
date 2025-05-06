@@ -1,10 +1,9 @@
 package com.chatterbox.api_rest.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
@@ -17,4 +16,8 @@ public class UsuarioRequestDto {
     private String password;
     private boolean es_admin_general;
     private String foto_perfil;
+
+    public String getPasswordCifrada(PasswordEncoder passwordEncoder) {
+        return passwordEncoder.encode(password);
+    }
 }

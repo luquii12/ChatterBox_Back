@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
 
-    // Faltaría crear el token en login/register y devolverlo
-
     @PostMapping("/login")
     public ResponseEntity<?> autenticarUsuario(@RequestBody LoginDto login) {
         return authService.login(login);

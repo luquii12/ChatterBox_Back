@@ -1,8 +1,8 @@
 -- Usuarios
 INSERT INTO usuarios (apodo, nombre_usuario, email, hash_password, es_admin_general, foto_perfil)
-VALUES ('lucasDev', 'Lucas', 'lucas@example.com', 'hashedpass1', TRUE, 'https://example.com/perfil1.jpg'),
-       ('anaCoder', 'Ana', 'ana@example.com', 'hashedpass2', FALSE, NULL),
-       ('david123', 'David', 'david@example.com', 'hashedpass3', FALSE, NULL);
+VALUES ('lucasDev', 'Lucas', 'lucas@example.com', '$2a$10$vNNdsN/5/Yy2mtjtWI0WuO0gjSyH3s8FputzSqmEflHbEyKk9CeG.', TRUE, 'https://example.com/perfil1.jpg'), -- Contraseña: 1234
+       ('anaCoder', 'Ana', 'ana@example.com', '$2a$10$DEbzgJ6FSgCJaZEC52VZIu0deDUHtw/aOTp10PEtvMorw2bSiN6oC', FALSE, NULL), -- Contraseña: 1234
+       ('david123', 'David', 'david@example.com', '$2a$10$khWNrSTXaNM4IlaIJ3R7ZO3iFCOFz24CePFzo89M7QFGkOYXml4A2', FALSE, NULL); -- Contraseña: 1234
 
 -- Grupos
 INSERT INTO grupos (id_usuario_creador, descripcion, nombre_grupo, es_privado, foto_grupo)

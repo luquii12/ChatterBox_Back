@@ -1,7 +1,6 @@
 package com.chatterbox.api_rest.repository;
 
 import com.chatterbox.api_rest.dto.UsuarioBdDto;
-import com.chatterbox.api_rest.dto.UsuarioRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -35,13 +34,12 @@ public class ChatterboxRepository {
                 .optional();
     }
 
-    public Long insertUser(UsuarioRequestDto nuevoUsuario) {
-        // Cambiar getPassword() por el método para encriptar
+    public Long insertUser(UsuarioBdDto nuevoUsuario) {
         jdbcClient.sql("INSERT INTO usuarios (apodo, nombre_usuario, email, hash_password) VALUES (?, ?, ?, ?)")
                 .param(1, nuevoUsuario.getApodo())
                 .param(2, nuevoUsuario.getNombre_usuario())
                 .param(3, nuevoUsuario.getEmail())
-                .param(4, nuevoUsuario.getPassword())
+                .param(4, nuevoUsuario.getHash_password())
                 .update();
 
         return jdbcClient.sql("SELECT id_usuario FROM usuarios WHERE email = ?")

@@ -8,6 +8,7 @@ import com.chatterbox.api_rest.repository.ChatterboxRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,8 +23,10 @@ public class AuthService {
     private final ChatterboxRepository chatterboxRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final ModelMapper modelMapper;
 
     public ResponseEntity<?> login(LoginDto login) {
+        System.out.println("Contraseña cifrada: " + passwordEncoder.encode("1234"));
         if (!usuarioLoginValido(login)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Credenciales inválidas");
@@ -43,15 +46,7 @@ public class AuthService {
                         .body("Contraseña incorrecta");
             }
 
-            String token = jwtUtil.generateToken(usuarioBd);
-
-            UsuarioResponseDto usuarioResponse = transformarUsuarioBdDtoAUsuarioResponseDto(usuarioBd);
-
-            Map<String, Object> respuesta = new HashMap<>();
-            respuesta.put("usuario", usuarioResponse);
-            respuesta.put("token", token);
-
-            return ResponseEntity.ok(respuesta);
+            return ResponseEntity.ok(prepararRespuestaConToken(usuarioBd));
         } catch (Exception e) {
             log.error("Error inesperado durante el login", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -67,15 +62,24 @@ public class AuthService {
 
         try {
             Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioByApodoOrEmail(nuevoUsuario.getApodo(), nuevoUsuario.getEmail());
-            if (usuarioOptional.isEmpty()) {
-                Long id = chatterboxRepository.insertUser(nuevoUsuario);
-
-                return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(transformarUsuarioRequestDtoAUsuarioResponseDto(id, nuevoUsuario));
+            if (usuarioOptional.isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Ya existe un usuario con el mismo apodo o email");
             }
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Ya existe un usuario con ese apodo o email");
 
+            UsuarioBdDto usuarioBd = new UsuarioBdDto(
+                    null,
+                    nuevoUsuario.getApodo(),
+                    nuevoUsuario.getNombre_usuario(),
+                    nuevoUsuario.getEmail(),
+                    nuevoUsuario.getPasswordCifrada(passwordEncoder)
+            );
+
+            Long id = chatterboxRepository.insertUser(usuarioBd);
+            usuarioBd.setId_usuario(id);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(prepararRespuestaConToken(usuarioBd));
         } catch (Exception e) {
             log.error("Error inesperado durante el registro", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -98,12 +102,16 @@ public class AuthService {
                 .allMatch(atributo -> atributo != null && !atributo.isEmpty());
     }
 
-    // Comprobarlos y mirar consulta para factorizar
-    private UsuarioResponseDto transformarUsuarioBdDtoAUsuarioResponseDto(UsuarioBdDto usuario) {
-        return new UsuarioResponseDto(usuario.getId_usuario(), usuario.getApodo(), usuario.getNombre_usuario(), usuario.getEmail(), usuario.isEs_admin_general(), usuario.getFoto_perfil());
+    private Map<String, Object> prepararRespuestaConToken(UsuarioBdDto usuarioBd) {
+        String token = jwtUtil.generateToken(usuarioBd);
+        return prepararRespuesta(usuarioBd, token);
     }
 
-    private UsuarioResponseDto transformarUsuarioRequestDtoAUsuarioResponseDto(Long id, UsuarioRequestDto usuario) {
-        return new UsuarioResponseDto(id, usuario.getApodo(), usuario.getNombre_usuario(), usuario.getEmail(), usuario.isEs_admin_general(), usuario.getFoto_perfil());
+    private Map<String, Object> prepararRespuesta(UsuarioBdDto usuarioBd, String token) {
+        UsuarioResponseDto usuarioResponse = modelMapper.map(usuarioBd, UsuarioResponseDto.class);
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("usuario", usuarioResponse);
+        respuesta.put("token", token);
+        return respuesta;
     }
 }
