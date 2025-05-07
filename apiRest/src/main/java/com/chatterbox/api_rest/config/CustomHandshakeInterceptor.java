@@ -1,26 +1,32 @@
 package com.chatterbox.api_rest.config;
 
-import org.springframework.web.socket.HandshakeInterceptor;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 public class CustomHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
-    public boolean beforeHandshake(HttpServletRequest request, HttpServletResponse response,
-                                   WebSocketSession wsSession, Map<String, Object> attributes) throws Exception {
-        // Aquí puedes agregar lógica antes de que se complete el handshake, por ejemplo:
-        System.out.println("Antes del handshake");
-        return true; // Si devuelve false, el handshake será rechazado
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+
+        if (request instanceof ServletServerHttpRequest servletRequest) {
+            HttpServletRequest httpRequest = (HttpServletRequest) servletRequest.getServletRequest();
+            String authHeader = httpRequest.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                attributes.put("authHeader", authHeader);
+            }
+        }
+
+        return true;
     }
 
     @Override
-    public void afterHandshake(HttpServletRequest request, HttpServletResponse response,
-                               WebSocketSession wsSession, Exception exception) {
-        // Aquí puedes agregar lógica después de que el handshake haya finalizado
+    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {
         System.out.println("Después del handshake");
     }
 }
