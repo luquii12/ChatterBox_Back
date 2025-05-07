@@ -30,11 +30,11 @@ VALUES (1, 1, TRUE, NOW()),                               -- Lucas admin en DevT
 
 -- Mensajes
 INSERT INTO mensajes (id_usuario, id_chat, hora_envio, contenido)
-VALUES (1, 1, NOW(), '¡Hola a todos en DevTalks!'),
-       (2, 1, DATE_ADD(NOW(), INTERVAL 1 MINUTE), '¡Buenas Lucas!'),
-       (1, 2, DATE_ADD(NOW(), INTERVAL 2 MINUTE), '¿Alguien sabe algo de Spring Boot?'),
-       (2, 3, DATE_ADD(NOW(), INTERVAL 3 MINUTE), 'Últimas noticias sobre IA: GPT-5 está en camino.'),
-       (3, 4, DATE_ADD(NOW(), INTERVAL 4 MINUTE), 'Estoy trabajando en un proyecto de visión artificial.');
+VALUES (1, 1, NOW(3), '¡Hola a todos en DevTalks!'),
+       (2, 1, DATE_ADD(NOW(3), INTERVAL 1 MINUTE), '¡Buenas Lucas!'),
+       (1, 2, DATE_ADD(NOW(3), INTERVAL 2 MINUTE), '¿Alguien sabe algo de Spring Boot?'),
+       (2, 3, DATE_ADD(NOW(3), INTERVAL 3 MINUTE), 'Últimas noticias sobre IA: GPT-5 está en camino.'),
+       (3, 4, DATE_ADD(NOW(3), INTERVAL 4 MINUTE), 'Estoy trabajando en un proyecto de visión artificial.');
 
 -- Eliminar datos en orden inverso a las dependencias
 # DELETE

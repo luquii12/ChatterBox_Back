@@ -1,7 +1,7 @@
 package com.chatterbox.api_rest.security;
 
 import com.chatterbox.api_rest.dto.UsuarioBdDto;
-import com.chatterbox.api_rest.repository.ChatterboxRepository;
+import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,9 +20,9 @@ import java.util.Optional;
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final ChatterboxRepository chatterboxRepository;
+    private final ChatterBoxRepository chatterboxRepository;
 
-    public JwtFilter(JwtUtil jwtUtil, ChatterboxRepository chatterboxRepository) {
+    public JwtFilter(JwtUtil jwtUtil, ChatterBoxRepository chatterboxRepository) {
         this.jwtUtil = jwtUtil;
         this.chatterboxRepository = chatterboxRepository;
     }

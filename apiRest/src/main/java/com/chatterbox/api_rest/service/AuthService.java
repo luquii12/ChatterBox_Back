@@ -4,7 +4,7 @@ import com.chatterbox.api_rest.dto.LoginDto;
 import com.chatterbox.api_rest.dto.UsuarioBdDto;
 import com.chatterbox.api_rest.dto.UsuarioRequestDto;
 import com.chatterbox.api_rest.dto.UsuarioResponseDto;
-import com.chatterbox.api_rest.repository.ChatterboxRepository;
+import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import java.util.*;
 @Service
 @Slf4j
 public class AuthService {
-    private final ChatterboxRepository chatterboxRepository;
+    private final ChatterBoxRepository chatterboxRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final ModelMapper modelMapper;
@@ -74,7 +74,7 @@ public class AuthService {
                     nuevoUsuario.getPasswordCifrada(passwordEncoder)
             );
 
-            Long id = chatterboxRepository.insertUser(usuarioBd);
+            Long id = chatterboxRepository.insertUsuario(usuarioBd);
             usuarioBd.setId_usuario(id);
 
             return ResponseEntity.status(HttpStatus.CREATED)

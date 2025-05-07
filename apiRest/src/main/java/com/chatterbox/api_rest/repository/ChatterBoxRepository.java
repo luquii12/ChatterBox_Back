@@ -4,14 +4,18 @@ import com.chatterbox.api_rest.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
 @Repository
-public class ChatterboxRepository {
+public class ChatterBoxRepository {
     private final JdbcClient jdbcClient;
+
+    // Ver si divido luego los métodos en varios repositorios o no
 
     public Optional<UsuarioBdDto> findUsuarioByEmail(String email) {
         return jdbcClient.sql("SELECT * FROM usuarios WHERE email = ?")
@@ -28,7 +32,7 @@ public class ChatterboxRepository {
                 .optional();
     }
 
-    public Long insertUser(UsuarioBdDto nuevoUsuario) {
+    public Long insertUsuario(UsuarioBdDto nuevoUsuario) {
         jdbcClient.sql("INSERT INTO usuarios (apodo, nombre_usuario, email, hash_password) VALUES (?, ?, ?, ?)")
                 .param(1, nuevoUsuario.getApodo())
                 .param(2, nuevoUsuario.getNombre_usuario())
@@ -82,5 +86,27 @@ public class ChatterboxRepository {
                 .param(1, idChat)
                 .query(ChatMensajeDto.class)
                 .list();
+    }
+
+    @Transactional
+    public Long insertMensaje(ChatMensajeRequestDto chatMensajeRequest, LocalDateTime horaEnvio) {
+        jdbcClient.sql("INSERT INTO mensajes (id_usuario, id_chat, contenido, hora_envio) VALUES (?, ?, ?, ?)")
+                .param(1, chatMensajeRequest.getId_usuario())
+                .param(2, chatMensajeRequest.getId_chat())
+                .param(3, chatMensajeRequest.getContenido())
+                .param(4, horaEnvio)
+                .update();
+
+        return jdbcClient.sql("SELECT LAST_INSERT_ID()")
+                .query(Long.class)
+                .single();
+    }
+
+    public Optional<UsuarioBdDto> findUsuarioByIdAndChatId(Long idUsuario, Long idChat) {
+        return jdbcClient.sql("SELECT u.* FROM usuarios u JOIN usuarios_grupos ug ON u.id_usuario = ug.id_usuario JOIN chats c ON ug.id_grupo = c.id_grupo WHERE u.id_usuario = ? AND c.id_chat = ?")
+                .param(1, idUsuario)
+                .param(2, idChat)
+                .query(UsuarioBdDto.class)
+                .optional();
     }
 }

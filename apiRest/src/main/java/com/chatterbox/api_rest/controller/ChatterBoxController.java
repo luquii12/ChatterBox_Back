@@ -1,14 +1,14 @@
 package com.chatterbox.api_rest.controller;
 
-import com.chatterbox.api_rest.service.ChatterboxService;
+import com.chatterbox.api_rest.service.ChatterBoxService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-public class ChatterboxController {
-    private final ChatterboxService chatterboxService;
+public class ChatterBoxController {
+    private final ChatterBoxService chatterboxService;
 
     // Falta determinar el tipo de mapping que van a ser los métodos
     @GetMapping("/usuarios/{idUsuario}") // No sé si lo necesito

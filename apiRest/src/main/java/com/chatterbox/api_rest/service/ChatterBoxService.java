@@ -1,7 +1,7 @@
 package com.chatterbox.api_rest.service;
 
 import com.chatterbox.api_rest.dto.*;
-import com.chatterbox.api_rest.repository.ChatterboxRepository;
+import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,8 +14,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class ChatterboxService {
-    private final ChatterboxRepository chatterboxRepository;
+public class ChatterBoxService {
+    private final ChatterBoxRepository chatterboxRepository;
 
     public ResponseEntity<?> getUsuarioById(Long idUsuario) {
         try {
