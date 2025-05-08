@@ -13,12 +13,17 @@ public class CustomHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-
+// Solucionar error al recuperar los datos
         if (request instanceof ServletServerHttpRequest servletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) servletRequest.getServletRequest();
-            String authHeader = httpRequest.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                attributes.put("authHeader", authHeader);
+            String token = httpRequest.getParameter("token");
+            String chatId = httpRequest.getParameter("chatId");
+            if (token != null && !token.isBlank()) {
+                attributes.put("token", token);
+            }
+
+            if (chatId != null) {
+                attributes.put("chatId", chatId); // Guardar chatId en los atributos de la sesión
             }
         }
 
