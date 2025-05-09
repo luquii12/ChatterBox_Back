@@ -4,6 +4,7 @@ import com.chatterbox.api_rest.dto.UsuarioBdDto;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -21,11 +22,14 @@ public class JwtUtil {
             .verifyWith((SecretKey) key)
             .build();
 
+    @Value("${jwt.expiration-ms}")
+    private long expirationMs;
+
     // Uso UsuarioBdDto porque es el único DTO de Usuario con todos los campos
     public String generateToken(UsuarioBdDto usuario) {
         return Jwts.builder()
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hora
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .subject(String.valueOf(usuario.getId_usuario()))
                 .claim("apodo", usuario.getApodo())
                 .claim("nombre_usuario", usuario.getNombre_usuario())

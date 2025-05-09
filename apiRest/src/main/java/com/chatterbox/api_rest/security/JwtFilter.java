@@ -20,11 +20,11 @@ import java.util.Optional;
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final ChatterBoxRepository chatterboxRepository;
+    private final ChatterBoxRepository chatterBoxRepository;
 
-    public JwtFilter(JwtUtil jwtUtil, ChatterBoxRepository chatterboxRepository) {
+    public JwtFilter(JwtUtil jwtUtil, ChatterBoxRepository chatterBoxRepository) {
         this.jwtUtil = jwtUtil;
-        this.chatterboxRepository = chatterboxRepository;
+        this.chatterBoxRepository = chatterBoxRepository;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class JwtFilter extends OncePerRequestFilter {
             final String email = jwtUtil.getEmailFromToken(token);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioByEmail(email);
+                Optional<UsuarioBdDto> usuarioOptional = chatterBoxRepository.findUsuarioByEmail(email);
                 UsuarioBdDto usuario = usuarioOptional.orElse(null);
 
                 if (usuario == null || jwtUtil.isTokenExpired(token) || !jwtUtil.validateToken(token, usuario)) {

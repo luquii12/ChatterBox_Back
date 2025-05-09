@@ -20,7 +20,7 @@ import java.util.*;
 @Service
 @Slf4j
 public class AuthService {
-    private final ChatterBoxRepository chatterboxRepository;
+    private final ChatterBoxRepository chatterBoxRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final ModelMapper modelMapper;
@@ -32,7 +32,7 @@ public class AuthService {
         }
 
         try {
-            Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioByEmail(login.getEmail());
+            Optional<UsuarioBdDto> usuarioOptional = chatterBoxRepository.findUsuarioByEmail(login.getEmail());
             if (usuarioOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Usuario no encontrado");
@@ -60,7 +60,7 @@ public class AuthService {
         }
 
         try {
-            Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioByApodoOrEmail(nuevoUsuario.getApodo(), nuevoUsuario.getEmail());
+            Optional<UsuarioBdDto> usuarioOptional = chatterBoxRepository.findUsuarioByApodoOrEmail(nuevoUsuario.getApodo(), nuevoUsuario.getEmail());
             if (usuarioOptional.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("Ya existe un usuario con el mismo apodo o email");
@@ -74,7 +74,7 @@ public class AuthService {
                     nuevoUsuario.getPasswordCifrada(passwordEncoder)
             );
 
-            Long id = chatterboxRepository.insertUsuario(usuarioBd);
+            Long id = chatterBoxRepository.insertUsuario(usuarioBd);
             usuarioBd.setId_usuario(id);
 
             return ResponseEntity.status(HttpStatus.CREATED)

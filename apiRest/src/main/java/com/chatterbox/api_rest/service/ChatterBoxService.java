@@ -15,11 +15,11 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class ChatterBoxService {
-    private final ChatterBoxRepository chatterboxRepository;
+    private final ChatterBoxRepository chatterBoxRepository;
 
     public ResponseEntity<?> getUsuarioById(Long idUsuario) {
         try {
-            Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioById(idUsuario);
+            Optional<UsuarioBdDto> usuarioOptional = chatterBoxRepository.findUsuarioById(idUsuario);
             if (usuarioOptional.isPresent()) {
                 return ResponseEntity.ok(usuarioOptional.get());
             }
@@ -34,9 +34,9 @@ public class ChatterBoxService {
 
     public ResponseEntity<?> obtenerGruposDeUnUsuario(Long idUsuario) {
         try {
-            Optional<UsuarioBdDto> usuarioOptional = chatterboxRepository.findUsuarioById(idUsuario);
+            Optional<UsuarioBdDto> usuarioOptional = chatterBoxRepository.findUsuarioById(idUsuario);
             if (usuarioOptional.isPresent()) {
-                List<GrupoUsuarioDto> gruposUsuario = chatterboxRepository.findGruposByUsuarioIdOrderByFechaInscripcion(idUsuario);
+                List<GrupoUsuarioDto> gruposUsuario = chatterBoxRepository.findGruposByUsuarioIdOrderByFechaInscripcion(idUsuario);
                 if (!gruposUsuario.isEmpty()) {
                     return ResponseEntity.ok(gruposUsuario);
                 }
@@ -52,9 +52,9 @@ public class ChatterBoxService {
 
     public ResponseEntity<?> obtenerChatsDeUnGrupo(Long idGrupo) {
         try {
-            Optional<GrupoDto> grupoOptional = chatterboxRepository.findGrupoById(idGrupo);
+            Optional<GrupoDto> grupoOptional = chatterBoxRepository.findGrupoById(idGrupo);
             if (grupoOptional.isPresent()) {
-                List<GrupoChatDto> chatsGrupo = chatterboxRepository.findChatsByGrupoIdOrderByFechaCreacion(idGrupo);
+                List<GrupoChatDto> chatsGrupo = chatterBoxRepository.findChatsByGrupoIdOrderByFechaCreacion(idGrupo);
                 if (!chatsGrupo.isEmpty()) {
                     return ResponseEntity.ok(chatsGrupo);
                 }
@@ -70,9 +70,9 @@ public class ChatterBoxService {
 
     public ResponseEntity<?> obtenerMensajesDeUnChat(Long idChat) {
         try {
-            Optional<ChatDto> grupoOptional = chatterboxRepository.findChatById(idChat);
+            Optional<ChatDto> grupoOptional = chatterBoxRepository.findChatById(idChat);
             if (grupoOptional.isPresent()) {
-                List<ChatMensajeDto> mensajesChat = chatterboxRepository.findMensajesByChatIdOrderByHoraEnvio(idChat);
+                List<ChatMensajeDto> mensajesChat = chatterBoxRepository.findMensajesByChatIdOrderByHoraEnvio(idChat);
                 if (!mensajesChat.isEmpty()) {
                     return ResponseEntity.ok(mensajesChat);
                 }
