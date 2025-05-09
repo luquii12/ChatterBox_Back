@@ -1,4 +1,4 @@
-package com.chatterbox.api_rest.dto;
+package com.chatterbox.api_rest.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

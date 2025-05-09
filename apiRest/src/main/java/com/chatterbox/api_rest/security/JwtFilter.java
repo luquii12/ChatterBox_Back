@@ -1,6 +1,6 @@
 package com.chatterbox.api_rest.security;
 
-import com.chatterbox.api_rest.dto.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

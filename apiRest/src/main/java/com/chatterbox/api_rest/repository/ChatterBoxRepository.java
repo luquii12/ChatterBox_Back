@@ -1,13 +1,13 @@
 package com.chatterbox.api_rest.repository;
 
-import com.chatterbox.api_rest.dto.*;
+import com.chatterbox.api_rest.dto.chat.ChatMensajeRequestDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -15,7 +15,7 @@ import java.util.Optional;
 public class ChatterBoxRepository {
     private final JdbcClient jdbcClient;
 
-    // Ver si divido luego los métodos en varios repositorios o no
+    // Por ahora voy a tener los métodos que son de las clases de Auth, JWT y WebSocket, si aumentan mucho lo dividiré en varios
 
     public Optional<UsuarioBdDto> findUsuarioByEmail(String email) {
         return jdbcClient.sql("SELECT * FROM usuarios WHERE email = ?")
@@ -44,48 +44,6 @@ public class ChatterBoxRepository {
                 .param(1, nuevoUsuario.getEmail())
                 .query(Long.class)
                 .single();
-    }
-
-    public Optional<UsuarioBdDto> findUsuarioById(Long idUsuario) {
-        return jdbcClient.sql("SELECT * FROM usuarios WHERE id_usuario = ?")
-                .param(1, idUsuario)
-                .query(UsuarioBdDto.class)
-                .optional();
-    }
-
-    public List<GrupoUsuarioDto> findGruposByUsuarioIdOrderByFechaInscripcion(Long idUsuario) {
-        return jdbcClient.sql("SELECT ug.es_admin_grupo, DATE_FORMAT(ug.fecha_inscripcion, '%Y-%m-%d %H:%i:%s') AS fecha_inscripcion, g.* FROM usuarios_grupos ug JOIN grupos g ON ug.id_grupo = g.id_grupo WHERE ug.id_usuario = ? ORDER BY fecha_inscripcion")
-                .param(1, idUsuario)
-                .query(GrupoUsuarioDto.class)
-                .list();
-    }
-
-    public Optional<GrupoDto> findGrupoById(Long idGrupo) {
-        return jdbcClient.sql("SELECT * FROM grupos WHERE id_grupo = ?")
-                .param(1, idGrupo)
-                .query(GrupoDto.class)
-                .optional();
-    }
-
-    public List<GrupoChatDto> findChatsByGrupoIdOrderByFechaCreacion(Long idGrupo) {
-        return jdbcClient.sql("SELECT id_chat, nombre_chat, DATE_FORMAT(fecha_creacion, '%Y-%m-%d %H:%i:%s') AS fecha_creacion FROM chats WHERE id_grupo = ? ORDER BY fecha_creacion")
-                .param(1, idGrupo)
-                .query(GrupoChatDto.class)
-                .list();
-    }
-
-    public Optional<ChatDto> findChatById(Long idChat) {
-        return jdbcClient.sql("SELECT id_chat,id_grupo,nombre_chat,DATE_FORMAT(fecha_creacion,'%Y-%m-%d %H:%i:%s') AS fecha_creacion FROM chats WHERE id_chat = ?")
-                .param(1, idChat)
-                .query(ChatDto.class)
-                .optional();
-    }
-
-    public List<ChatMensajeDto> findMensajesByChatIdOrderByHoraEnvio(Long idChat) {
-        return jdbcClient.sql("SELECT id_mensaje, id_usuario, contenido, SUBSTRING(DATE_FORMAT(hora_envio, '%Y-%m-%d %H:%i:%s.%f'), 1, 23) AS hora_envio FROM mensajes WHERE id_chat = ? ORDER BY hora_envio")
-                .param(1, idChat)
-                .query(ChatMensajeDto.class)
-                .list();
     }
 
     @Transactional

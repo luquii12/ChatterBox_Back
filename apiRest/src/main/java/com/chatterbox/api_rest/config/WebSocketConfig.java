@@ -1,5 +1,6 @@
 package com.chatterbox.api_rest.config;
 
+import com.chatterbox.api_rest.websocket.CustomHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.WebSocketHandler;

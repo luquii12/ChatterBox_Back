@@ -1,9 +1,9 @@
 package com.chatterbox.api_rest.service;
 
-import com.chatterbox.api_rest.dto.LoginDto;
-import com.chatterbox.api_rest.dto.UsuarioBdDto;
-import com.chatterbox.api_rest.dto.UsuarioRequestDto;
-import com.chatterbox.api_rest.dto.UsuarioResponseDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioRequestDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioResponseDto;
+import com.chatterbox.api_rest.dto.auth.LoginDto;
 import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
 import lombok.RequiredArgsConstructor;

@@ -27,7 +27,7 @@ public class SecurityConfig {
         // y no uso cookies para enviar el token de autenticación
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**")
-                        .permitAll() // permite preflight
+                        .permitAll() // permite preflight porque al usar axios da error con las urls que necesitan autenticación
                         .requestMatchers("/auth/**", "/error", "/ws/**")
                         .permitAll() // Permitir acceso público
                         .anyRequest()

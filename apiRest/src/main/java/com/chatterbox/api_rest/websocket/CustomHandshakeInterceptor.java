@@ -1,4 +1,4 @@
-package com.chatterbox.api_rest.config;
+package com.chatterbox.api_rest.websocket;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.server.ServerHttpRequest;

@@ -1,6 +1,6 @@
-package com.chatterbox.api_rest.service;
+package com.chatterbox.api_rest.service.websocket;
 
-import com.chatterbox.api_rest.dto.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,7 @@ import java.util.Optional;
 public class ChatService {
     private final ChatterBoxRepository chatterBoxRepository;
 
-    public boolean usuarioPerteneceAlChat(Long idUsuario, Long idChat) {
+    public boolean usuarioEsMiembroDelChat(Long idUsuario, Long idChat) {
         try {
             Optional<UsuarioBdDto> usuarioBdOptional = chatterBoxRepository.findUsuarioByIdAndChatId(idUsuario, idChat);
             return usuarioBdOptional.isPresent();

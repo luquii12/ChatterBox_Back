@@ -1,4 +1,4 @@
-package com.chatterbox.api_rest.dto;
+package com.chatterbox.api_rest.dto.chat;
 
 import lombok.*;
 
@@ -7,8 +7,9 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-public class GrupoChatDto {
+public class ChatDto {
     private Long id_chat;
+    private Long id_grupo;
     private String nombre_chat;
     private String fecha_creacion;
 }

@@ -1,6 +1,6 @@
 package com.chatterbox.api_rest.security;
 
-import com.chatterbox.api_rest.dto.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

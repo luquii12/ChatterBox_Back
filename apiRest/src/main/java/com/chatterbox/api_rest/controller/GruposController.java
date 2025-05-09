@@ -1,7 +1,7 @@
 package com.chatterbox.api_rest.controller;
 
-import com.chatterbox.api_rest.dto.GrupoDto;
-import com.chatterbox.api_rest.service.ChatterBoxService;
+import com.chatterbox.api_rest.dto.grupo.GrupoDto;
+import com.chatterbox.api_rest.service.GruposService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,36 +11,36 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class GruposController {
-    private final ChatterBoxService chatterBoxService;
+    private final GruposService gruposService;
 
     @GetMapping("/{idGrupo}")
-    public ResponseEntity<?> obtenerGrupoPorId(@PathVariable Long idGrupo) {
+    public ResponseEntity<?> getGrupoPorId(@PathVariable Long idGrupo) {
         return null;
     }
 
     @PostMapping("/buscar")
-    public ResponseEntity<?> obtenerGrupoPorNombre(@RequestParam String nombre) {
+    public ResponseEntity<?> getGrupoPorNombre(@RequestParam String nombre) {
         return null;
     }
 
     @PostMapping
-    public ResponseEntity<?> crearGrupo(@RequestBody GrupoDto grupoDto) {
+    public ResponseEntity<?> createGrupo(@RequestBody GrupoDto grupoDto) {
         return null;
     }
 
     @GetMapping("/{idGrupo}/administradores")
-    public ResponseEntity<?> obtenerAdministradoresDeUnGrupo(@PathVariable Long idGrupo) {
+    public ResponseEntity<?> getAdministradoresDeUnGrupo(@PathVariable Long idGrupo) {
         return null;
     }
 
     @GetMapping("/{idGrupo}/chats")
-    public ResponseEntity<?> obtenerChatsDeUnGrupo(@PathVariable Long idGrupo) {
-        return chatterBoxService.obtenerChatsDeUnGrupo(idGrupo);
+    public ResponseEntity<?> getChatsDeUnGrupo(@PathVariable Long idGrupo) {
+        return gruposService.getChatsDeUnGrupo(idGrupo);
     }
 
     // Puede que sea de chats y no grupos
     @GetMapping("/{idGrupo}/usuarios/{idUsuario}/mensajes")
-    public ResponseEntity<?> obtenerMensajesDeUnUsuarioEnUnGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
+    public ResponseEntity<?> getMensajesDeUnUsuarioEnUnGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
         return null;
     }
 }

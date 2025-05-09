@@ -1,7 +1,7 @@
-package com.chatterbox.api_rest.service;
+package com.chatterbox.api_rest.service.websocket;
 
-import com.chatterbox.api_rest.dto.ChatMensajeRequestDto;
-import com.chatterbox.api_rest.dto.MensajeDto;
+import com.chatterbox.api_rest.dto.chat.ChatMensajeRequestDto;
+import com.chatterbox.api_rest.dto.mensaje.MensajeDto;
 import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 public class MensajeService {
     private final ChatterBoxRepository chatterBoxRepository;
 
-    public MensajeDto guardarMensaje(ChatMensajeRequestDto chatMensajeRequest) {
+    public MensajeDto guardarMensajeEnBD(ChatMensajeRequestDto chatMensajeRequest) {
         LocalDateTime horaActual = LocalDateTime.now();
         try {
             Long id = chatterBoxRepository.insertMensaje(chatMensajeRequest, horaActual);

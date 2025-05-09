@@ -1,13 +1,13 @@
-package com.chatterbox.api_rest.config;
+package com.chatterbox.api_rest.websocket;
 
-import com.chatterbox.api_rest.dto.ChatMensajeDto;
-import com.chatterbox.api_rest.dto.ChatMensajeRequestDto;
-import com.chatterbox.api_rest.dto.MensajeDto;
-import com.chatterbox.api_rest.dto.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.chat.ChatMensajeDto;
+import com.chatterbox.api_rest.dto.chat.ChatMensajeRequestDto;
+import com.chatterbox.api_rest.dto.mensaje.MensajeDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
-import com.chatterbox.api_rest.service.ChatService;
-import com.chatterbox.api_rest.service.MensajeService;
+import com.chatterbox.api_rest.service.websocket.ChatService;
+import com.chatterbox.api_rest.service.websocket.MensajeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,12 +77,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // Convertir el mensaje JSON en objeto DTO
         ChatMensajeRequestDto peticion = objectMapper.readValue(payload, ChatMensajeRequestDto.class);
 
-        if (!chatService.usuarioPerteneceAlChat(peticion.getId_usuario(), peticion.getId_chat())) {
+        if (!chatService.usuarioEsMiembroDelChat(peticion.getId_usuario(), peticion.getId_chat())) {
             log.warn("El usuario {} no pertenece al chat {}", peticion.getId_usuario(), peticion.getId_chat());
             return;
         }
 
-        MensajeDto mensajeGuardado = mensajeService.guardarMensaje(peticion);
+        MensajeDto mensajeGuardado = mensajeService.guardarMensajeEnBD(peticion);
         ChatMensajeDto respuesta = new ChatMensajeDto(
                 mensajeGuardado.getId_mensaje(),
                 mensajeGuardado.getId_usuario(),
@@ -90,9 +90,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 mensajeGuardado.getHora_envio()
         );
 
-        // Enviar mensaje de vuelta al cliente (o a todos, si gestionas eso tú)
+        // Enviar el mensaje a todos los usuarios conectados al chat
         String jsonRespuesta = objectMapper.writeValueAsString(respuesta);
-
         for (WebSocketSession s : sesionesPorChat.get(peticion.getId_chat())) {
             if (s.isOpen()) {
                 s.sendMessage(new TextMessage(jsonRespuesta));

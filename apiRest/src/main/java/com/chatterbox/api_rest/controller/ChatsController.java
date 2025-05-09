@@ -1,6 +1,6 @@
 package com.chatterbox.api_rest.controller;
 
-import com.chatterbox.api_rest.service.ChatterBoxService;
+import com.chatterbox.api_rest.service.ChatsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class ChatsController {
-    private final ChatterBoxService chatterBoxService;
+    private final ChatsService chatsService;
 
     @GetMapping("/{idChat}/mensajes")
-    public ResponseEntity<?> obtenerMensajesDeUnChat(@PathVariable Long idChat) {
-        return chatterBoxService.obtenerMensajesDeUnChat(idChat);
+    public ResponseEntity<?> getMensajesDeUnChat(@PathVariable Long idChat) {
+        return chatsService.getMensajesDeUnChat(idChat);
     }
 }
