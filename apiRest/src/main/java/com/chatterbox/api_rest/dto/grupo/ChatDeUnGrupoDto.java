@@ -7,7 +7,7 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-public class GrupoChatDto {
+public class ChatDeUnGrupoDto {
     private Long id_chat;
     private String nombre_chat;
     private String fecha_creacion;

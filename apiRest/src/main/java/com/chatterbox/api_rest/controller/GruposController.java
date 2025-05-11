@@ -24,8 +24,8 @@ public class GruposController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createGrupo(@RequestBody GrupoDto grupoDto) {
-        return null;
+    public ResponseEntity<?> createGrupo(@RequestBody GrupoDto nuevoGrupo) {
+        return gruposService.createGrupo(nuevoGrupo);
     }
 
     @GetMapping("/{idGrupo}/administradores")

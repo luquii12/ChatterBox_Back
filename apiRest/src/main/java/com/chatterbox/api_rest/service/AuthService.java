@@ -1,11 +1,12 @@
 package com.chatterbox.api_rest.service;
 
+import com.chatterbox.api_rest.dto.auth.LoginDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioRequestDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioResponseDto;
-import com.chatterbox.api_rest.dto.auth.LoginDto;
 import com.chatterbox.api_rest.repository.ChatterBoxRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
+import com.chatterbox.api_rest.util.ValidacionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -66,13 +67,12 @@ public class AuthService {
                         .body("Ya existe un usuario con el mismo apodo o email");
             }
 
-            UsuarioBdDto usuarioBd = new UsuarioBdDto(
-                    null,
-                    nuevoUsuario.getApodo(),
-                    nuevoUsuario.getNombre_usuario(),
-                    nuevoUsuario.getEmail(),
-                    nuevoUsuario.getPasswordCifrada(passwordEncoder)
-            );
+            UsuarioBdDto usuarioBd = UsuarioBdDto.builder()
+                    .apodo(nuevoUsuario.getApodo())
+                    .nombre_usuario(nuevoUsuario.getNombre_usuario())
+                    .email(nuevoUsuario.getEmail())
+                    .hash_password(nuevoUsuario.getPasswordCifrada(passwordEncoder))
+                    .build();
 
             Long id = chatterBoxRepository.insertUsuario(usuarioBd);
             usuarioBd.setId_usuario(id);
@@ -88,26 +88,17 @@ public class AuthService {
 
     private boolean usuarioLoginValido(LoginDto usuario) {
         List<String> atributos = Arrays.asList(usuario.getEmail(), usuario.getPassword());
-        return camposValidos(atributos);
+        return ValidacionUtils.camposValidos(atributos);
     }
 
     private boolean usuarioRegistroValido(UsuarioRequestDto usuario) {
         List<String> atributos = Arrays.asList(usuario.getApodo(), usuario.getNombre_usuario(), usuario.getEmail(), usuario.getPassword());
-        return camposValidos(atributos);
-    }
-
-    private boolean camposValidos(List<String> atributos) {
-        return atributos.stream()
-                .allMatch(atributo -> atributo != null && !atributo.isEmpty());
+        return ValidacionUtils.camposValidos(atributos);
     }
 
     private Map<String, Object> prepararRespuestaConToken(UsuarioBdDto usuarioBd) {
-        String token = jwtUtil.generateToken(usuarioBd);
-        return prepararRespuesta(usuarioBd, token);
-    }
-
-    private Map<String, Object> prepararRespuesta(UsuarioBdDto usuarioBd, String token) {
         UsuarioResponseDto usuarioResponse = modelMapper.map(usuarioBd, UsuarioResponseDto.class);
+        String token = jwtUtil.generateToken(usuarioBd);
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("usuario", usuarioResponse);
         respuesta.put("token", token);

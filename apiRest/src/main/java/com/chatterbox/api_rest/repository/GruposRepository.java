@@ -1,6 +1,6 @@
 package com.chatterbox.api_rest.repository;
 
-import com.chatterbox.api_rest.dto.grupo.GrupoChatDto;
+import com.chatterbox.api_rest.dto.grupo.ChatDeUnGrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -21,10 +21,10 @@ public class GruposRepository {
                 .optional();
     }
 
-    public List<GrupoChatDto> findChatsByGrupoIdOrderByFechaCreacion(Long idGrupo) {
+    public List<ChatDeUnGrupoDto> findChatsByGrupoIdOrderByFechaCreacion(Long idGrupo) {
         return jdbcClient.sql("SELECT id_chat, nombre_chat, DATE_FORMAT(fecha_creacion, '%Y-%m-%d %H:%i:%s') AS fecha_creacion FROM chats WHERE id_grupo = ? ORDER BY fecha_creacion")
                 .param(1, idGrupo)
-                .query(GrupoChatDto.class)
+                .query(ChatDeUnGrupoDto.class)
                 .list();
     }
 }
