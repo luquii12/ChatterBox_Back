@@ -39,8 +39,15 @@ public class GruposRepository {
                 .param(5, nuevoGrupo.getFoto_grupo())
                 .update();
 
-        return jdbcClient.sql("SELECT LAST_INSERT_ID()")
+        Long id = jdbcClient.sql("SELECT LAST_INSERT_ID()")
                 .query(Long.class)
                 .single();
+
+        jdbcClient.sql("INSERT INTO usuarios_grupos VALUES (?, ?, true, NOW())")
+                .param(1, nuevoGrupo.getId_usuario_creador())
+                .param(2, id)
+                .update();
+
+        return id;
     }
 }
