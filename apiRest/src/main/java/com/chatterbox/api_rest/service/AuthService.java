@@ -15,7 +15,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -87,13 +90,13 @@ public class AuthService {
     }
 
     private boolean usuarioLoginValido(LoginDto usuario) {
-        List<String> atributos = Arrays.asList(usuario.getEmail(), usuario.getPassword());
-        return ValidacionUtils.camposValidos(atributos);
+        List<String> camposObligatorios = List.of(usuario.getEmail(), usuario.getPassword());
+        return ValidacionUtils.camposValidos(camposObligatorios);
     }
 
     private boolean usuarioRegistroValido(UsuarioRequestDto usuario) {
-        List<String> atributos = Arrays.asList(usuario.getApodo(), usuario.getNombre_usuario(), usuario.getEmail(), usuario.getPassword());
-        return ValidacionUtils.camposValidos(atributos);
+        List<String> camposObligatorios = List.of(usuario.getApodo(), usuario.getNombre_usuario(), usuario.getEmail(), usuario.getPassword());
+        return ValidacionUtils.camposValidos(camposObligatorios);
     }
 
     private Map<String, Object> prepararRespuestaConToken(UsuarioBdDto usuarioBd) {

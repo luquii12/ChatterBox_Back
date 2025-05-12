@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.*;
 public class UsuariosController {
     private final UsuariosService usuariosService;
 
-    // Falta determinar el tipo de mapping que van a ser los métodos
-    @GetMapping("/{idUsuario}") // No sé si lo necesito
+    @GetMapping("/{idUsuario}")
     public ResponseEntity<?> getUsuarioPorId(@PathVariable Long idUsuario) {
         return usuariosService.getUsuarioById(idUsuario);
     }

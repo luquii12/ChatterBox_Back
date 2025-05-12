@@ -5,6 +5,7 @@ import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,5 +27,20 @@ public class GruposRepository {
                 .param(1, idGrupo)
                 .query(ChatDeUnGrupoDto.class)
                 .list();
+    }
+
+    @Transactional
+    public Long insertGrupo(GrupoDto nuevoGrupo) {
+        jdbcClient.sql("INSERT INTO grupos (id_usuario_creador, descripcion, nombre_grupo, es_privado, foto_grupo) VALUES (?, ?, ?, ?, ?)")
+                .param(1, nuevoGrupo.getId_usuario_creador())
+                .param(2, nuevoGrupo.getDescripcion())
+                .param(3, nuevoGrupo.getNombre_grupo())
+                .param(4, nuevoGrupo.isEs_privado())
+                .param(5, nuevoGrupo.getFoto_grupo())
+                .update();
+
+        return jdbcClient.sql("SELECT LAST_INSERT_ID()")
+                .query(Long.class)
+                .single();
     }
 }
