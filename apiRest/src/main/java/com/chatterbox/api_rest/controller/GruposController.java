@@ -28,6 +28,11 @@ public class GruposController {
         return gruposService.createGrupo(nuevoGrupo);
     }
 
+    @PostMapping("/join")
+    public ResponseEntity<?> joinGrupo(@RequestBody GrupoDto nuevoGrupo) {
+        return null;
+    }
+
     @GetMapping("/{idGrupo}/administradores")
     public ResponseEntity<?> getAdministradoresDeUnGrupo(@PathVariable Long idGrupo) {
         return null;
