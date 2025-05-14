@@ -5,12 +5,15 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 
 /*
 En el futuro añadir refresh token para que sea más segura y fluida la app
@@ -34,7 +37,7 @@ public class JwtUtil {
                 .claim("apodo", usuario.getApodo())
                 .claim("nombre_usuario", usuario.getNombre_usuario())
                 .claim("email", usuario.getEmail())
-                .claim("es_admin_general", usuario.isEs_admin_general())
+                .claim("rol", usuario.isEs_admin_general() ? "ADMIN_GENERAL" : "USUARIO_NORMAL")
                 .signWith(key)
                 .compact();
     }
@@ -49,6 +52,13 @@ public class JwtUtil {
         return parser.parseSignedClaims(token)
                 .getPayload()
                 .get("email", String.class);
+    }
+
+    public List<GrantedAuthority> getAuthoritiesFromToken(String token) {
+        String rol = parser.parseSignedClaims(token)
+                .getPayload()
+                .get("rol", String.class);
+        return List.of(new SimpleGrantedAuthority("ROLE_" + rol));
     }
 
     public boolean isTokenExpired(String token) {

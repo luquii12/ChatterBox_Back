@@ -21,6 +21,43 @@ public class UsuariosRepository {
                 .optional();
     }
 
+    public Optional<UsuarioBdDto> findUsuarioByIdAndChatId(Long idUsuario, Long idChat) {
+        return jdbcClient.sql("SELECT u.* FROM usuarios u JOIN usuarios_grupos ug ON u.id_usuario = ug.id_usuario JOIN chats c ON ug.id_grupo = c.id_grupo WHERE u.id_usuario = ? AND c.id_chat = ?")
+                .param(1, idUsuario)
+                .param(2, idChat)
+                .query(UsuarioBdDto.class)
+                .optional();
+    }
+
+    public Optional<UsuarioBdDto> findUsuarioByEmail(String email) {
+        return jdbcClient.sql("SELECT * FROM usuarios WHERE email = ?")
+                .param(1, email)
+                .query(UsuarioBdDto.class)
+                .optional();
+    }
+
+    public Optional<UsuarioBdDto> findUsuarioByApodoOrEmail(String apodo, String email) {
+        return jdbcClient.sql("SELECT * FROM usuarios WHERE apodo = ? OR email = ?")
+                .param(1, apodo)
+                .param(2, email)
+                .query(UsuarioBdDto.class)
+                .optional();
+    }
+
+    public Long insertUsuario(UsuarioBdDto nuevoUsuario) {
+        jdbcClient.sql("INSERT INTO usuarios (apodo, nombre_usuario, email, hash_password) VALUES (?, ?, ?, ?)")
+                .param(1, nuevoUsuario.getApodo())
+                .param(2, nuevoUsuario.getNombre_usuario())
+                .param(3, nuevoUsuario.getEmail())
+                .param(4, nuevoUsuario.getHash_password())
+                .update();
+
+        return jdbcClient.sql("SELECT id_usuario FROM usuarios WHERE email = ?")
+                .param(1, nuevoUsuario.getEmail())
+                .query(Long.class)
+                .single();
+    }
+
     public List<GrupoDelUsuarioDto> findGruposByUsuarioIdOrderByFechaInscripcion(Long idUsuario) {
         return jdbcClient.sql("SELECT ug.es_admin_grupo, DATE_FORMAT(ug.fecha_inscripcion, '%Y-%m-%d %H:%i:%s') AS fecha_inscripcion, g.* FROM usuarios_grupos ug JOIN grupos g ON ug.id_grupo = g.id_grupo WHERE ug.id_usuario = ? ORDER BY ug.fecha_inscripcion")
                 .param(1, idUsuario)

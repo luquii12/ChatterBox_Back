@@ -4,7 +4,7 @@ import com.chatterbox.api_rest.dto.auth.LoginDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioRequestDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioResponseDto;
-import com.chatterbox.api_rest.repository.ChatterBoxRepository;
+import com.chatterbox.api_rest.repository.UsuariosRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
 import com.chatterbox.api_rest.util.ValidacionUtils;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class AuthService {
-    private final ChatterBoxRepository chatterBoxRepository;
+    private final UsuariosRepository usuariosRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final ModelMapper modelMapper;
@@ -36,7 +36,7 @@ public class AuthService {
         }
 
         try {
-            Optional<UsuarioBdDto> usuarioOptional = chatterBoxRepository.findUsuarioByEmail(login.getEmail());
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioByEmail(login.getEmail());
             if (usuarioOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Usuario no encontrado");
@@ -64,7 +64,7 @@ public class AuthService {
         }
 
         try {
-            Optional<UsuarioBdDto> usuarioOptional = chatterBoxRepository.findUsuarioByApodoOrEmail(nuevoUsuario.getApodo(), nuevoUsuario.getEmail());
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioByApodoOrEmail(nuevoUsuario.getApodo(), nuevoUsuario.getEmail());
             if (usuarioOptional.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("Ya existe un usuario con el mismo apodo o email");
@@ -77,7 +77,7 @@ public class AuthService {
                     .hash_password(nuevoUsuario.getPasswordCifrada(passwordEncoder))
                     .build();
 
-            Long id = chatterBoxRepository.insertUsuario(usuarioBd);
+            Long id = usuariosRepository.insertUsuario(usuarioBd);
             usuarioBd.setId_usuario(id);
 
             return ResponseEntity.status(HttpStatus.CREATED)

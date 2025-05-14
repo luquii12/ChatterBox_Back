@@ -4,10 +4,10 @@ import com.chatterbox.api_rest.dto.chat.ChatMensajeDto;
 import com.chatterbox.api_rest.dto.chat.ChatMensajeRequestDto;
 import com.chatterbox.api_rest.dto.mensaje.MensajeDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
-import com.chatterbox.api_rest.repository.ChatterBoxRepository;
+import com.chatterbox.api_rest.repository.UsuariosRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
-import com.chatterbox.api_rest.service.websocket.ChatService;
-import com.chatterbox.api_rest.service.websocket.MensajeService;
+import com.chatterbox.api_rest.service.ChatsService;
+import com.chatterbox.api_rest.service.MensajesService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final JwtUtil jwtUtil;
-    private final ChatterBoxRepository chatterBoxRepository;
-    private final ChatService chatService;
-    private final MensajeService mensajeService;
+    private final UsuariosRepository usuariosRepository;
+    private final ChatsService chatsService;
+    private final MensajesService mensajesService;
     private final ObjectMapper objectMapper = new ObjectMapper(); // para leer JSON si hace falta
     // Guarda las sesiones activas por chat (solo en memoria mientras están conectados)
     private final Map<Long, Set<WebSocketSession>> sesionesPorChat = new ConcurrentHashMap<>();
@@ -50,7 +50,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             // Validar y decodificar el token JWT
             String email = jwtUtil.getEmailFromToken(token);
 
-            Optional<UsuarioBdDto> usuarioOptional = chatterBoxRepository.findUsuarioByEmail(email);
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioByEmail(email);
             if (usuarioOptional.isPresent() && jwtUtil.validateToken(token, usuarioOptional.get())) {
                 // Aquí puedes asociar la autenticación al WebSocket session si es necesario
                 Authentication authentication = new UsernamePasswordAuthenticationToken(email, null, List.of());
@@ -77,12 +77,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // Convertir el mensaje JSON en objeto DTO
         ChatMensajeRequestDto peticion = objectMapper.readValue(payload, ChatMensajeRequestDto.class);
 
-        if (!chatService.usuarioEsMiembroDelChat(peticion.getId_usuario(), peticion.getId_chat())) {
+        if (!chatsService.usuarioEsMiembroDelChat(peticion.getId_usuario(), peticion.getId_chat())) {
             log.warn("El usuario {} no pertenece al chat {}", peticion.getId_usuario(), peticion.getId_chat());
             return;
         }
 
-        MensajeDto mensajeGuardado = mensajeService.guardarMensajeEnBD(peticion);
+        MensajeDto mensajeGuardado = mensajesService.guardarMensajeEnBD(peticion);
         ChatMensajeDto respuesta = new ChatMensajeDto(
                 mensajeGuardado.getId_mensaje(),
                 mensajeGuardado.getId_usuario(),

@@ -2,7 +2,9 @@ package com.chatterbox.api_rest.service;
 
 import com.chatterbox.api_rest.dto.chat.ChatDto;
 import com.chatterbox.api_rest.dto.chat.ChatMensajeDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.repository.ChatsRepository;
+import com.chatterbox.api_rest.repository.UsuariosRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import java.util.Optional;
 @Slf4j
 public class ChatsService {
     private final ChatsRepository chatsRepository;
+    private final UsuariosRepository usuariosRepository;
 
     public ResponseEntity<?> getMensajesDeUnChat(Long idChat) {
         try {
@@ -33,6 +36,16 @@ public class ChatsService {
             log.error("Error al obtener los mensajes del chat con id {}", idChat);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
+        }
+    }
+
+    public boolean usuarioEsMiembroDelChat(Long idUsuario, Long idChat) {
+        try {
+            Optional<UsuarioBdDto> usuarioBdOptional = usuariosRepository.findUsuarioByIdAndChatId(idUsuario, idChat);
+            return usuarioBdOptional.isPresent();
+        } catch (Exception e) {
+            log.error("Error al verificar si el usuario {} pertenece al chat {}: {}", idUsuario, idChat, e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 }
