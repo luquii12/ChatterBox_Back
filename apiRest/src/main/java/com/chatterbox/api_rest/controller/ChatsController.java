@@ -13,7 +13,10 @@ public class ChatsController {
     private final ChatsService chatsService;
 
     @GetMapping("/{idChat}/mensajes")
-    public ResponseEntity<?> getMensajesDeUnChat(@PathVariable Long idChat) {
-        return chatsService.getMensajesDeUnChat(idChat);
+    public ResponseEntity<?> getMensajesDeUnChat(@PathVariable Long idChat, @RequestParam(required = false) Integer limite) {
+        if (limite != null)
+            return chatsService.getMensajesDelChat(idChat, limite);
+        return chatsService.getAllMensajesDelChat(idChat);
+
     }
 }

@@ -27,4 +27,12 @@ public class ChatsRepository {
                 .query(ChatMensajeDto.class)
                 .list();
     }
+
+    public List<ChatMensajeDto> findMensajesByChatIdOrderByHoraEnvioLimitDeterminado(Long idChat, Integer limite) {
+        return jdbcClient.sql("SELECT id_mensaje, id_usuario, contenido, SUBSTRING(DATE_FORMAT(hora_envio, '%Y-%m-%d %H:%i:%s.%f'), 1, 23) AS hora_envio FROM (SELECT * FROM mensajes WHERE id_chat = ? ORDER BY hora_envio DESC LIMIT ?) AS ultimos ORDER BY hora_envio")
+                .param(1, idChat)
+                .param(2, limite)
+                .query(ChatMensajeDto.class)
+                .list();
+    }
 }
