@@ -35,4 +35,9 @@ public class ChatsRepository {
                 .query(ChatMensajeDto.class)
                 .list();
     }
+
+    public Long insertChat(ChatDto nuevoChat) {
+        // Insert
+        return null;
+    }
 }

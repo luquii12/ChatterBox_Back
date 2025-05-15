@@ -5,6 +5,7 @@ import com.chatterbox.api_rest.dto.chat.ChatMensajeDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.repository.ChatsRepository;
 import com.chatterbox.api_rest.repository.UsuariosRepository;
+import com.chatterbox.api_rest.util.ValidacionUtils;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,26 @@ public class ChatsService {
         } catch (Exception e) {
             log.error("Error al verificar si el usuario {} pertenece al chat {}: {}", idUsuario, idChat, e.getMessage());
             throw new RuntimeException(e);
+        }
+    }
+
+    public ResponseEntity<?> createChat(ChatDto nuevoChat) {
+        List<String> camposObligatiorios = List.of(nuevoChat.getNombre_chat());
+        if (!ValidacionUtils.camposValidos(camposObligatiorios)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Campos invalidos");
+        }
+
+        try {
+            // ¿Debería devolver el id y la fecha de creación?
+            Long id = chatsRepository.insertChat(nuevoChat);
+            nuevoChat.setId_chat(id);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(nuevoChat);
+        } catch (Exception e) {
+            log.error("Error inesperado al crear el chat", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
         }
     }
 }
