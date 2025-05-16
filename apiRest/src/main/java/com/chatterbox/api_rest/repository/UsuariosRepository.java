@@ -1,6 +1,7 @@
 package com.chatterbox.api_rest.repository;
 
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioRequestDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -63,5 +64,14 @@ public class UsuariosRepository {
                 .param(1, idUsuario)
                 .query(GrupoDelUsuarioDto.class)
                 .list();
+    }
+
+    public Optional<UsuarioBdDto> findUsuarioByApodoOrEmailAndDifferentId(UsuarioRequestDto usuario) {
+        return jdbcClient.sql("SELECT * FROM usuarios WHERE (apodo = ? OR email = ?) AND id_usuario != ?")
+                .param(1, usuario.getApodo())
+                .param(2, usuario.getEmail())
+                .param(3, usuario.getId_usuario())
+                .query(UsuarioBdDto.class)
+                .optional();
     }
 }

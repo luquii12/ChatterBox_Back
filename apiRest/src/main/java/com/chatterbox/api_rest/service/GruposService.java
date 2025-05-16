@@ -37,6 +37,10 @@ public class GruposService {
             log.error("Error al agregar grupo ", e);
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Grupo ya existente para ese usuario");
+        }catch (Exception e) {
+            log.error("Error inesperado al crear el grupo", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
         }
     }
 

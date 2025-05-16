@@ -5,7 +5,9 @@ import com.chatterbox.api_rest.dto.chat.ChatMensajeDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,8 +38,15 @@ public class ChatsRepository {
                 .list();
     }
 
-    public Long insertChat(ChatDto nuevoChat) {
-        // Insert
-        return null;
+    @Transactional
+    public Long insertChat(ChatDto nuevoChat, LocalDateTime fechaCreacion) {
+        jdbcClient.sql("INSERT INTO chats (id_grupo, nombre_chat, fecha_creacion) VALUES (?, ?, ?)")
+                .param(1, nuevoChat.getId_grupo())
+                .param(2, nuevoChat.getNombre_chat())
+                .param(3, fechaCreacion)
+                .update();
+        return jdbcClient.sql("SELECT LAST_INSERT_ID()")
+                .query(Long.class)
+                .single();
     }
 }

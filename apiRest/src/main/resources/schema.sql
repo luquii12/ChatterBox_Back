@@ -56,8 +56,10 @@ CREATE TABLE chats
 CREATE INDEX idx_chats_id_grupo ON chats (id_grupo);
 
 -- No pueden existir chats con el mismo nombre en un grupo
-CREATE UNIQUE INDEX idx_chats_nombre_grupo ON chats (nombre_chat, id_grupo);
+# CREATE UNIQUE INDEX idx_chats_nombre_grupo ON chats (nombre_chat, id_grupo);
 
+-- Si tenéis el último índice hay que borrarlo:
+DROP INDEX idx_chats_nombre_grupo ON chats;
 
 # Tabla mensajes
 CREATE TABLE mensajes

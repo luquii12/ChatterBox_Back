@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,16 +72,21 @@ public class ChatsService {
     }
 
     public ResponseEntity<?> createChat(ChatDto nuevoChat) {
-        List<String> camposObligatiorios = List.of(nuevoChat.getNombre_chat());
-        if (!ValidacionUtils.camposValidos(camposObligatiorios)) {
+        List<String> camposObligatorios = List.of(nuevoChat.getNombre_chat());
+        if (!ValidacionUtils.camposValidos(camposObligatorios)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Campos invalidos");
         }
 
+        LocalDateTime fechaActual = LocalDateTime.now();
         try {
-            // ¿Debería devolver el id y la fecha de creación?
-            Long id = chatsRepository.insertChat(nuevoChat);
+            Long id = chatsRepository.insertChat(nuevoChat, fechaActual);
             nuevoChat.setId_chat(id);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String fechaFormateada = fechaActual.format(formatter);
+            nuevoChat.setFecha_creacion(fechaFormateada);
+
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(nuevoChat);
         } catch (Exception e) {

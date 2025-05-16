@@ -1,5 +1,6 @@
 package com.chatterbox.api_rest.controller;
 
+import com.chatterbox.api_rest.dto.usuario.UsuarioRequestDto;
 import com.chatterbox.api_rest.service.UsuariosService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,5 +27,10 @@ public class UsuariosController {
     @GetMapping("/{idUsuario}/grupos")
     public ResponseEntity<?> getGruposDeUnUsuario(@PathVariable Long idUsuario) {
         return usuariosService.getGruposDelUsuario(idUsuario);
+    }
+
+    @PutMapping("/{idUsuario}")
+    public ResponseEntity<?> editUsuario(@PathVariable Long idUsuario, @RequestBody UsuarioRequestDto usuarioModificado) {
+        return usuariosService.editUsuario(usuarioModificado);
     }
 }
