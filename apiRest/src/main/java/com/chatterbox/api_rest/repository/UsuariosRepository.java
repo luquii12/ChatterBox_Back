@@ -1,7 +1,6 @@
 package com.chatterbox.api_rest.repository;
 
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
-import com.chatterbox.api_rest.dto.usuario.UsuarioRequestDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -66,12 +65,36 @@ public class UsuariosRepository {
                 .list();
     }
 
-    public Optional<UsuarioBdDto> findUsuarioByApodoOrEmailAndDifferentId(UsuarioRequestDto usuario) {
+    public Optional<UsuarioBdDto> findUsuarioByApodoOrEmailAndDifferentId(Long idUsuario, String apodo, String email) {
         return jdbcClient.sql("SELECT * FROM usuarios WHERE (apodo = ? OR email = ?) AND id_usuario != ?")
-                .param(1, usuario.getApodo())
-                .param(2, usuario.getEmail())
-                .param(3, usuario.getId_usuario())
+                .param(1, apodo)
+                .param(2, email)
+                .param(3, idUsuario)
                 .query(UsuarioBdDto.class)
                 .optional();
+    }
+
+    public String findFotoPerfilByIdUsuario(Long idUsuario) {
+        return jdbcClient.sql("SELECT foto_perfil FROM usuarios WHERE id_usuario = ?")
+                .param(1, idUsuario)
+                .query(String.class)
+                .single();
+    }
+
+    public String findHashPasswordByIdUsuario(Long idUsuario) {
+        return jdbcClient.sql("SELECT hash_password FROM usuarios WHERE id_usuario = ?")
+                .query(String.class)
+                .single();
+    }
+
+    public void updateUsuario(UsuarioBdDto usuarioBd) {
+        jdbcClient.sql("UPDATE usuarios SET apodo = ?, nombre_usuario = ?, email = ?, hash_password = ?, foto_perfil = ? WHERE id_usuario = ?")
+                .param(1, usuarioBd.getApodo())
+                .param(2, usuarioBd.getNombre_usuario())
+                .param(3, usuarioBd.getEmail())
+                .param(4, usuarioBd.getHash_password())
+                .param(5, usuarioBd.getFoto_perfil())
+                .param(6, usuarioBd.getId_usuario())
+                .update();
     }
 }

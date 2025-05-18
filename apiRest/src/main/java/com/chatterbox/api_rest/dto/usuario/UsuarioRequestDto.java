@@ -9,7 +9,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Setter
 @ToString
 public class UsuarioRequestDto {
-    private Long id_usuario;
     private String apodo;
     private String nombre_usuario;
     private String email;

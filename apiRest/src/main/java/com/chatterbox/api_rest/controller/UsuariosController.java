@@ -31,6 +31,6 @@ public class UsuariosController {
 
     @PutMapping("/{idUsuario}")
     public ResponseEntity<?> editUsuario(@PathVariable Long idUsuario, @RequestBody UsuarioRequestDto usuarioModificado) {
-        return usuariosService.editUsuario(usuarioModificado);
+        return usuariosService.editUsuario(idUsuario, usuarioModificado);
     }
 }
