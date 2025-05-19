@@ -20,6 +20,7 @@ public class ChatsController {
 
     }
 
+    // Añadir rol admin en servicio
     @PostMapping
     public ResponseEntity<?> createChat(@RequestBody ChatDto nuevoChat) {
         return chatsService.createChat(nuevoChat);

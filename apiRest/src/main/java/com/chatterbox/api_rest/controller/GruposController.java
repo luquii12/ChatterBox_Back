@@ -3,6 +3,8 @@ package com.chatterbox.api_rest.controller;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import com.chatterbox.api_rest.service.GruposService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,23 +15,34 @@ import org.springframework.web.bind.annotation.*;
 public class GruposController {
     private final GruposService gruposService;
 
-    @GetMapping("/{idGrupo}")
-    public ResponseEntity<?> getGrupoPorId(@PathVariable Long idGrupo) {
-        return null;
-    }
-
-    @PostMapping("/buscar")
-    public ResponseEntity<?> getGrupoPorNombre(@RequestParam String nombre) {
-        return null;
-    }
-
     @PostMapping
     public ResponseEntity<?> createGrupo(@RequestBody GrupoDto nuevoGrupo) {
         return gruposService.createGrupo(nuevoGrupo);
     }
 
-    @PostMapping("/join")
-    public ResponseEntity<?> joinGrupo(@RequestBody GrupoDto nuevoGrupo) {
+    @GetMapping("/publicos")
+    public ResponseEntity<?> getGruposPublicosPorNombre(@RequestParam(required = false) String nombre, @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        return gruposService.getGruposPublicosPorNombre(nombre, pageable);
+    }
+
+    @PostMapping("/{idGrupo}/join")
+    public ResponseEntity<?> joinGrupo(@PathVariable Long idGrupo) {
+        // Me devuelve el grupo si todo está bien
+        return gruposService.joinGrupo(idGrupo);
+    }
+
+    @PutMapping("/{idGrupo}")
+    public ResponseEntity<?> editGrupo(@PathVariable Long idGrupo, @RequestBody GrupoDto grupoModificado) {
+        return gruposService.editGrupo(idGrupo, grupoModificado);
+    }
+
+    @DeleteMapping("/{idGrupo}/leave")
+    public ResponseEntity<?> leaveGrupo(@PathVariable Long idGrupo) {
+        return gruposService.leaveGrupo(idGrupo);
+    }
+
+    @GetMapping("/{idGrupo}")
+    public ResponseEntity<?> getGrupoPorId(@PathVariable Long idGrupo) {
         return null;
     }
 

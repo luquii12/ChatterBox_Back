@@ -75,7 +75,7 @@ public class ChatsService {
         List<String> camposObligatorios = List.of(nuevoChat.getNombre_chat());
         if (!ValidacionUtils.camposValidos(camposObligatorios)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Campos invalidos");
+                    .body("Campos inválidos");
         }
 
         LocalDateTime fechaActual = LocalDateTime.now();

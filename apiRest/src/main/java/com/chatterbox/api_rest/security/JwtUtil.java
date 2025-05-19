@@ -61,18 +61,11 @@ public class JwtUtil {
         return List.of(new SimpleGrantedAuthority("ROLE_" + rol));
     }
 
-    public boolean isTokenExpired(String token) {
-        Date expiration = parser.parseSignedClaims(token)
-                .getPayload()
-                .getExpiration();
-        return expiration.before(new Date());
-    }
-
     public boolean validateToken(String token, UsuarioBdDto usuario) {
         try {
             String idUsuario = getIdFromToken(token);
             String email = getEmailFromToken(token);
-            return idUsuario.equals(String.valueOf(usuario.getId_usuario())) && email.equals(usuario.getEmail()) && !isTokenExpired(token);
+            return idUsuario.equals(String.valueOf(usuario.getId_usuario())) && email.equals(usuario.getEmail());
         } catch (Exception e) {
             return false;
         }

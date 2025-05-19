@@ -67,7 +67,7 @@ public class UsuariosService {
         List<String> camposObligatorios = List.of(usuarioModificado.getApodo(), usuarioModificado.getNombre_usuario(), usuarioModificado.getEmail(), usuarioModificado.getPassword());
         if (!ValidacionUtils.camposValidos(camposObligatorios)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Campos invalidos");
+                    .body("Campos inválidos");
         }
 
         try {
@@ -108,7 +108,7 @@ public class UsuariosService {
 
             return ResponseEntity.ok(prepararRespuestaConToken(usuarioBd));
         } catch (Exception e) {
-            log.error("Error inesperado durante el registro del cambio", e);
+            log.error("Error inesperado durante el registro de los cambios del usuario", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }

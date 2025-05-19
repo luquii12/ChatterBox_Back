@@ -34,7 +34,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final UsuariosRepository usuariosRepository;
     private final ChatsService chatsService;
     private final MensajesService mensajesService;
-    private final ObjectMapper objectMapper = new ObjectMapper(); // para leer JSON si hace falta
+    private final ObjectMapper objectMapper = new ObjectMapper(); // Para leer JSON si hace falta
     // Guarda las sesiones activas por chat (solo en memoria mientras están conectados)
     private final Map<Long, Set<WebSocketSession>> sesionesPorChat = new ConcurrentHashMap<>();
 
@@ -52,10 +52,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
             Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioByEmail(email);
             if (usuarioOptional.isPresent() && jwtUtil.validateToken(token, usuarioOptional.get())) {
-                // Aquí puedes asociar la autenticación al WebSocket session si es necesario
+                // Asociar la autenticación al WebSocket session
                 Authentication authentication = new UsernamePasswordAuthenticationToken(email, null, List.of());
                 session.getAttributes()
-                        .put("usuario", authentication); // Guardamos el usuario autenticado en los atributos de la sesión
+                        .put("usuario", authentication); // Guardar el usuario autenticado en los atributos de la sesión
 
                 // Asociar la sesión con el chatId correspondiente
                 Long chatIdLong = Long.parseLong(chatId); // Convertir el chatId de String a Long
@@ -103,19 +103,19 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
         log.info("Conexión cerrada: {}", closeStatus);
 
-        // Eliminamos la sesión cerrada de todos los chats donde esté
+        // Eliminar la sesión cerrada de todos los chats donde esté
         sesionesPorChat.entrySet()
                 .removeIf(entry -> {
                     Set<WebSocketSession> sesiones = entry.getValue();
                     sesiones.remove(session);
-                    return sesiones.isEmpty(); // limpiamos el chat si no queda nadie conectado
+                    return sesiones.isEmpty(); // Limpiar el chat si no queda nadie conectado
                 });
     }
 
     @Override
     public void handleBinaryMessage(WebSocketSession session, BinaryMessage message) {
         // Este método se usa para manejar mensajes binarios (si es necesario)
-        // Actualmente no lo estamos usando, pero es obligatorio implementarlo
+        // Actualmente no lo estoy usando, pero es obligatorio implementarlo
     }
 
     @Override

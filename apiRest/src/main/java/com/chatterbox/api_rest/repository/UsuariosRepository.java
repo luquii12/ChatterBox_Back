@@ -44,6 +44,15 @@ public class UsuariosRepository {
                 .optional();
     }
 
+    public boolean findIfUsuarioIsAdminGrupoByIdUsuario(Long idUsuario, Long idGrupo) {
+        Optional<Boolean> esAdminOptional = jdbcClient.sql("SELECT es_admin_grupo FROM usuarios_grupos WHERE id_usuario = ? AND id_grupo = ?")
+                .param(1, idUsuario)
+                .param(2, idGrupo)
+                .query(Boolean.class)
+                .optional();
+        return esAdminOptional.orElse(false);
+    }
+
     public Long insertUsuario(UsuarioBdDto nuevoUsuario) {
         jdbcClient.sql("INSERT INTO usuarios (apodo, nombre_usuario, email, hash_password) VALUES (?, ?, ?, ?)")
                 .param(1, nuevoUsuario.getApodo())
