@@ -6,14 +6,11 @@ import com.chatterbox.api_rest.dto.mensaje.MensajeDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.repository.UsuariosRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
-import com.chatterbox.api_rest.security.UsuarioAutenticado;
 import com.chatterbox.api_rest.service.ChatsService;
 import com.chatterbox.api_rest.service.MensajesService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
@@ -39,33 +36,31 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper(); // Para leer JSON si hace falta
     // Guarda las sesiones activas por chat (solo en memoria mientras están conectados)
     private final Map<Long, Set<WebSocketSession>> sesionesPorChat = new ConcurrentHashMap<>();
+    private final Map<WebSocketSession, UsuarioBdDto> usuariosPorSesion = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         // Obtener el token JWT de los atributos de la sesión (pasado desde el interceptor de handshake)
         String token = (String) session.getAttributes()
                 .get("token");
-        String chatId = (String) session.getAttributes()
+        Long chatId = (Long) session.getAttributes()
                 .get("chatId");
 
-        if (token != null && !token.isBlank() && chatId != null && !chatId.isBlank()) {
+        if (token != null && !token.trim()
+                .isBlank() && chatId != null) {
             // Validar y decodificar el token JWT
             String email = jwtUtil.getEmailFromToken(token);
-            Long id = Long.valueOf(jwtUtil.getIdFromToken(token));
+            Long idUsuario = Long.valueOf(jwtUtil.getIdFromToken(token));
             List<GrantedAuthority> authorities = jwtUtil.getAuthoritiesFromToken(token);
 
             Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioByEmail(email);
             if (usuarioOptional.isPresent() && jwtUtil.validateToken(token, usuarioOptional.get())) {
-                // Asociar la autenticación al WebSocket session
-                UsuarioAutenticado usuarioAutenticado = new UsuarioAutenticado(id, email, authorities);
-                Authentication authentication = new UsernamePasswordAuthenticationToken(usuarioAutenticado, null, authorities);
-                session.getAttributes()
-                        .put("user", authentication); // Guardar el usuario autenticado en los atributos de la sesión
-                log.info("Usuario autenticado añadido a la sesión WebSocket: {}", authentication.getPrincipal());
                 // Asociar la sesión con el chatId correspondiente
-                Long chatIdLong = Long.parseLong(chatId); // Convertir el chatId de String a Long
-                sesionesPorChat.computeIfAbsent(chatIdLong, k -> ConcurrentHashMap.newKeySet())
+                sesionesPorChat.computeIfAbsent(chatId, k -> ConcurrentHashMap.newKeySet())
                         .add(session); // Añadir la sesión al conjunto de sesiones del chat
+                // Asociar la sesión con el usuario correspondiente
+                usuariosPorSesion.put(session, usuarioOptional.get());
+
                 return;
             }
         }
@@ -75,23 +70,38 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        String payload = message.getPayload();
-        log.info("Mensaje recibido: {}", payload);
-
-        // Convertir el mensaje JSON en objeto DTO
-        ChatMensajeRequestDto peticion = objectMapper.readValue(payload, ChatMensajeRequestDto.class);
-
-        if (!chatsService.usuarioEsMiembroDelChat(peticion.getId_usuario(), peticion.getId_chat())) {
-            log.warn("El usuario {} no pertenece al chat {}", peticion.getId_usuario(), peticion.getId_chat());
+        UsuarioBdDto usuarioBd = usuariosPorSesion.get(session);
+        if (usuarioBd == null) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Usuario no autenticado"));
             return;
         }
 
+        Long chatId = (Long) session.getAttributes()
+                .get("chatId");
+        if (chatId == null) {
+            session.close(CloseStatus.BAD_DATA.withReason("ChatId no encontrado en sesión"));
+            return;
+        }
+
+        String payload = message.getPayload();
+        log.info("Mensaje recibido: {}", payload);
+
+        // Convertir el mensaje JSON en objeto DTO solo para obtener el contenido
+        ChatMensajeRequestDto peticion = objectMapper.readValue(payload, ChatMensajeRequestDto.class);
+
+        if (!chatsService.usuarioEsMiembroDelChat(usuarioBd.getId_usuario(), chatId)) {
+            log.warn("El usuario {} no pertenece al chat {}", usuarioBd.getId_usuario(), chatId);
+            return;
+        }
+
+        peticion.setId_usuario(usuarioBd.getId_usuario());
+        peticion.setId_chat(chatId);
         MensajeDto mensajeGuardado = mensajesService.guardarMensajeEnBD(peticion);
         ChatMensajeDto respuesta = new ChatMensajeDto(mensajeGuardado.getId_mensaje(), mensajeGuardado.getId_usuario(), mensajeGuardado.getContenido(), mensajeGuardado.getHora_envio());
 
         // Enviar el mensaje a todos los usuarios conectados al chat
         String jsonRespuesta = objectMapper.writeValueAsString(respuesta);
-        for (WebSocketSession s : sesionesPorChat.get(peticion.getId_chat())) {
+        for (WebSocketSession s : sesionesPorChat.get(chatId)) {
             if (s.isOpen()) {
                 s.sendMessage(new TextMessage(jsonRespuesta));
             }
@@ -109,6 +119,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     sesiones.remove(session);
                     return sesiones.isEmpty(); // Limpiar el chat si no queda nadie conectado
                 });
+
+        // Eliminar el usuario asociado a la sesión
+        usuariosPorSesion.remove(session);
     }
 
     @Override
@@ -123,4 +136,3 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         return false;
     }
 }
-

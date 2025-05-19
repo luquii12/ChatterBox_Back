@@ -1,6 +1,7 @@
 package com.chatterbox.api_rest.websocket;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -9,6 +10,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
 
+@Slf4j
 public class CustomHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
@@ -22,7 +24,14 @@ public class CustomHandshakeInterceptor implements HandshakeInterceptor {
             }
 
             if (chatId != null) {
-                attributes.put("chatId", chatId); // Guardar chatId en los atributos de la sesión
+                try {
+                    Long chatIdLong = Long.parseLong(chatId);
+                    attributes.put("chatId", chatIdLong); // Guardar chatId en los atributos de la sesión
+                } catch (NumberFormatException e) {
+                    // Podrías lanzar excepción o ignorar, dependiendo de tu lógica
+                    log.error("chatId no válido: " + chatId);
+                    return false; // Cancela handshake si chatId no es válido
+                }
             }
         }
 
