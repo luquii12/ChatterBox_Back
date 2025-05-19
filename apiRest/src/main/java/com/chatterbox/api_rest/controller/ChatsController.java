@@ -17,7 +17,6 @@ public class ChatsController {
     public ResponseEntity<?> getMensajesDeUnChat(@PathVariable Long idChat, @RequestParam(required = false) Integer limite) {
         if (limite != null) return chatsService.getMensajesDelChat(idChat, limite);
         return chatsService.getAllMensajesDelChat(idChat);
-
     }
 
     // Añadir rol admin en servicio

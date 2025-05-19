@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -80,14 +81,16 @@ public class GruposService {
         }
 
         try {
-            Page<GrupoDto> gruposPublicos = gruposRepository.findGruposPublicosByNombre(nombre, pageable);
-            if (gruposPublicos.isEmpty()) {
+            int total = gruposRepository.countGruposPublicosPorNombre(nombre);
+            if (total == 0) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("No existe grupos con el nombre buscado");
+                        .body("No existen grupos con el nombre buscado");
             }
 
-            return ResponseEntity.ok(gruposPublicos);
-            return  null;
+            List<GrupoDto> gruposPublicos = gruposRepository.findGruposPublicosByNombre(nombre, pageable);
+            Page<GrupoDto> page = new PageImpl<>(gruposPublicos, pageable, total);
+
+            return ResponseEntity.ok(page);
         } catch (Exception e) {
             log.error("Error inesperado durante la búsqueda de los grupos públicos", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
