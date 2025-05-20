@@ -9,6 +9,6 @@ public class ValidacionUtils {
 
     public static boolean camposValidos(List<String> atributos) {
         return atributos.stream()
-                .allMatch(atributo -> atributo != null && !atributo.trim().isEmpty());
+                .allMatch(atributo -> atributo != null && !atributo.isBlank());
     }
 }

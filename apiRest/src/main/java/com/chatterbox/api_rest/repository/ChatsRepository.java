@@ -49,4 +49,25 @@ public class ChatsRepository {
                 .query(Long.class)
                 .single();
     }
+
+    public Long findIdGrupoByIdChat(Long idChat) {
+        return jdbcClient.sql("SELECT id_grupo FROM chats WHERE id_chat = ?")
+                .param(1, idChat)
+                .query(Long.class)
+                .optional()
+                .orElse(null);
+    }
+
+    @Transactional
+    public boolean deleteChat(Long idChat) {
+        jdbcClient.sql("DELETE FROM mensajes WHERE id_chat = ?")
+                .param(1, idChat)
+                .update();
+
+        int filasEliminadasChats = jdbcClient.sql("DELETE FROM chats WHERE id_chat = ?")
+                .param(1, idChat)
+                .update();
+
+        return filasEliminadasChats > 0;
+    }
 }

@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -102,27 +103,37 @@ public class GruposRepository {
                 .isPresent();
     }
 
-    public int countGruposPublicosPorNombre(String nombre) {
+    public int countGruposPublicosPorNombreWhereUsuarioNoEste(String nombre, Long idUsuario) {
         String nombreBusqueda = "%" + nombre + "%";
 
-        Optional<Integer> numOptional = jdbcClient.sql("SELECT COUNT(*) FROM grupos WHERE es_privado = false AND LOWER(nombre_grupo) LIKE LOWER(?)")
+        Optional<Integer> numOptional = jdbcClient.sql("SELECT COUNT(*) FROM grupos WHERE es_privado = false AND LOWER(nombre_grupo) LIKE LOWER(?) AND id_grupo NOT IN (SELECT id_grupo FROM usuarios_grupos WHERE id_usuario = ?)")
                 .param(1, nombreBusqueda)
+                .param(2, idUsuario)
                 .query(Integer.class)
                 .optional();
 
         return numOptional.orElse(0);
     }
 
-    public List<GrupoDto> findGruposPublicosByNombre(String nombre, Pageable pageable) {
+    public List<GrupoDto> findGruposPublicosByNombreWhereUsuarioNoEste(String nombre, Long idUsuario, Pageable pageable) {
         int pageSize = pageable.getPageSize();
         int offset = (int) pageable.getOffset();
         String nombreBusqueda = "%" + nombre + "%";
 
-        return jdbcClient.sql("SELECT * FROM grupos WHERE es_privado = false AND LOWER(nombre_grupo) LIKE LOWER(?) ORDER BY nombre_grupo LIMIT ? OFFSET ?")
+        return jdbcClient.sql("SELECT * FROM grupos WHERE es_privado = false AND LOWER(nombre_grupo) LIKE LOWER(?) AND id_grupo NOT IN (SELECT id_grupo FROM usuarios_grupos WHERE id_usuario = ?) ORDER BY nombre_grupo LIMIT ? OFFSET ?")
                 .param(1, nombreBusqueda)
-                .param(2, pageSize)
-                .param(3, offset)
+                .param(2, idUsuario)
+                .param(3, pageSize)
+                .param(4, offset)
                 .query(GrupoDto.class)
                 .list();
+    }
+
+    public void insertUsuarioGrupo(Long idUsuario, Long idGrupo, LocalDateTime fechaInscripcion) {
+        jdbcClient.sql("INSERT INTO usuarios_grupos (id_usuario, id_grupo, fecha_inscripcion) VALUES (?, ?, ?)")
+                .param(1, idUsuario)
+                .param(2, idGrupo)
+                .param(3, fechaInscripcion)
+                .update();
     }
 }

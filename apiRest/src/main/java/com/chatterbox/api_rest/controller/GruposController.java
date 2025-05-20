@@ -20,14 +20,13 @@ public class GruposController {
         return gruposService.createGrupo(nuevoGrupo);
     }
 
-    @GetMapping("/publicos")
-    public ResponseEntity<?> getGruposPublicosPorNombre(@RequestParam(required = false) String nombre, @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return gruposService.getGruposPublicosPorNombre(nombre, pageable);
+    @GetMapping("/publicos/disponibles")
+    public ResponseEntity<?> getGruposPublicosPorNombreWhereUsuarioNoEste(@RequestParam(required = false) String nombre, @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        return gruposService.getGruposPublicosPorNombreWhereUsuarioNoEste(nombre, pageable);
     }
 
     @PostMapping("/{idGrupo}/join")
     public ResponseEntity<?> joinGrupo(@PathVariable Long idGrupo) {
-        // Me devuelve el grupo si todo está bien
         return gruposService.joinGrupo(idGrupo);
     }
 

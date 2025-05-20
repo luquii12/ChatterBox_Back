@@ -19,9 +19,13 @@ public class ChatsController {
         return chatsService.getAllMensajesDelChat(idChat);
     }
 
-    // Añadir rol admin en servicio
     @PostMapping
     public ResponseEntity<?> createChat(@RequestBody ChatDto nuevoChat) {
         return chatsService.createChat(nuevoChat);
+    }
+
+    @DeleteMapping("/{idChat}")
+    public ResponseEntity<?> deleteChat(@PathVariable Long idChat) {
+        return chatsService.deleteChat(idChat);
     }
 }

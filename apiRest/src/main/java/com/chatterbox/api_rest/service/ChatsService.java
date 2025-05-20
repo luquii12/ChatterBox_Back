@@ -5,6 +5,7 @@ import com.chatterbox.api_rest.dto.chat.ChatMensajeDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.repository.ChatsRepository;
 import com.chatterbox.api_rest.repository.UsuariosRepository;
+import com.chatterbox.api_rest.util.AuthUtils;
 import com.chatterbox.api_rest.util.ValidacionUtils;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.Optional;
 public class ChatsService {
     private final ChatsRepository chatsRepository;
     private final UsuariosRepository usuariosRepository;
+    private final AuthUtils authUtils;
 
     public ResponseEntity<?> getAllMensajesDelChat(Long idChat) {
         try {
@@ -72,14 +74,25 @@ public class ChatsService {
     }
 
     public ResponseEntity<?> createChat(ChatDto nuevoChat) {
-        List<String> camposObligatorios = List.of(nuevoChat.getNombre_chat());
-        if (!ValidacionUtils.camposValidos(camposObligatorios)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Campos inválidos");
-        }
-
-        LocalDateTime fechaActual = LocalDateTime.now();
         try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, nuevoChat.getId_grupo())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            List<String> camposObligatorios = List.of(nuevoChat.getNombre_chat());
+            if (!ValidacionUtils.camposValidos(camposObligatorios)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Campos inválidos");
+            }
+
+            LocalDateTime fechaActual = LocalDateTime.now();
             Long id = chatsRepository.insertChat(nuevoChat, fechaActual);
             nuevoChat.setId_chat(id);
 
@@ -91,6 +104,40 @@ public class ChatsService {
                     .body(nuevoChat);
         } catch (Exception e) {
             log.error("Error inesperado al crear el chat", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    public ResponseEntity<?> deleteChat(Long idChat) {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            Long idGrupo = chatsRepository.findIdGrupoByIdChat(idChat);
+            if (idGrupo == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Chat no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            boolean eliminado = chatsRepository.deleteChat(idChat);
+            if (!eliminado) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se ha podido eliminar el chat");
+            }
+
+            return ResponseEntity.noContent()
+                    .build();
+        } catch (Exception e) {
+            log.error("Error inesperado al eliminar el chat", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }

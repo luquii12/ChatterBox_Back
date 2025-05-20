@@ -7,9 +7,10 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
+@Builder
 public class GrupoDelUsuarioMinDto {
+    private Long id_usuario;
     private Long id_grupo;
-    private Long id_usuario_creador;
     private boolean es_admin_grupo;
     private String fecha_inscripcion;
 }

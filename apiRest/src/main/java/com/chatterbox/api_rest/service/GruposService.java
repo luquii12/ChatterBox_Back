@@ -2,24 +2,23 @@ package com.chatterbox.api_rest.service;
 
 import com.chatterbox.api_rest.dto.grupo.ChatDeUnGrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
-import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import com.chatterbox.api_rest.repository.GruposRepository;
-import com.chatterbox.api_rest.repository.UsuariosRepository;
-import com.chatterbox.api_rest.security.JwtUtil;
-import com.chatterbox.api_rest.security.UsuarioAutenticado;
+import com.chatterbox.api_rest.util.AuthUtils;
 import com.chatterbox.api_rest.util.ValidacionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,17 +27,25 @@ import java.util.Optional;
 @Slf4j
 public class GruposService {
     private final GruposRepository gruposRepository;
-    private final UsuariosRepository usuariosRepository;
-    private final JwtUtil jwtUtil;
+    private final AuthUtils authUtils;
+    private final ModelMapper modelMapper;
 
     public ResponseEntity<?> createGrupo(GrupoDto nuevoGrupo) {
-        List<String> camposObligatorios = List.of(String.valueOf(nuevoGrupo.getId_usuario_creador()), nuevoGrupo.getNombre_grupo());
-        if (!ValidacionUtils.camposValidos(camposObligatorios)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Credenciales inválidas");
-        }
-
         try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            nuevoGrupo.setId_usuario_creador(idUsuarioAutenticado);
+
+            List<String> camposObligatorios = List.of(nuevoGrupo.getNombre_grupo());
+            if (!ValidacionUtils.camposValidos(camposObligatorios)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Credenciales inválidas");
+            }
+
             Long id = gruposRepository.insertGrupo(nuevoGrupo);
             nuevoGrupo.setId_grupo(id);
 
@@ -73,21 +80,20 @@ public class GruposService {
         }
     }
 
-    public ResponseEntity<?> getGruposPublicosPorNombre(String nombre, Pageable pageable) {
-        if (nombre == null || nombre.trim()
-                .isEmpty()) {
+    public ResponseEntity<?> getGruposPublicosPorNombreWhereUsuarioNoEste(String nombre, Pageable pageable) {
+        if (nombre == null || nombre.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Falta el nombre del grupo");
         }
 
         try {
-            int total = gruposRepository.countGruposPublicosPorNombre(nombre);
+            int total = gruposRepository.countGruposPublicosPorNombreWhereUsuarioNoEste(nombre, authUtils.obtenerIdDelToken());
             if (total == 0) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("No existen grupos con el nombre buscado");
+                        .body("No existen grupos disponibles con el nombre buscado");
             }
 
-            List<GrupoDto> gruposPublicos = gruposRepository.findGruposPublicosByNombre(nombre, pageable);
+            List<GrupoDto> gruposPublicos = gruposRepository.findGruposPublicosByNombreWhereUsuarioNoEste(nombre, authUtils.obtenerIdDelToken(), pageable);
             Page<GrupoDto> page = new PageImpl<>(gruposPublicos, pageable, total);
 
             return ResponseEntity.ok(page);
@@ -99,31 +105,62 @@ public class GruposService {
     }
 
     public ResponseEntity<?> joinGrupo(Long idGrupo) {
+        try {
+            Optional<GrupoDto> grupoOptional = gruposRepository.findGrupoById(idGrupo);
+            if (grupoOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Grupo no encontrado");
+            }
 
-        return null;
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            // Usuario está en el grupo
+            if (gruposRepository.usuarioPerteneceAlGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("El usuario ya pertenece al grupo");
+            }
+
+            LocalDateTime fechaActual = LocalDateTime.now();
+            gruposRepository.insertUsuarioGrupo(idUsuarioAutenticado, idGrupo, fechaActual);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String fechaFormateada = fechaActual.format(formatter);
+            // Falta rellenar el dto
+            GrupoDto grupo = grupoOptional.get();
+            GrupoDelUsuarioDto nuevoGrupoDelUsuario = modelMapper.map(grupo, GrupoDelUsuarioDto.class);
+            nuevoGrupoDelUsuario.setFecha_inscripcion(fechaFormateada);
+
+            return ResponseEntity.ok(nuevoGrupoDelUsuario);
+        } catch (Exception e) {
+            log.error("Error inesperado al unirse al grupo {}", idGrupo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
     }
 
     public ResponseEntity<?> editGrupo(Long idGrupo, GrupoDto grupoModificado) {
-        // Comprobar que el usuario sea admin del grupo
-        Long idUsuarioAutenticado = obtenerIdDelToken();
-        Optional<UsuarioBdDto> usuarioAutenticadoOptional = usuariosRepository.findUsuarioById(idUsuarioAutenticado);
-        if (usuarioAutenticadoOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Usuario no encontrado");
-        }
-
-        if (!usuariosRepository.findIfUsuarioIsAdminGrupoByIdUsuario(idUsuarioAutenticado, idGrupo)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("El usuario no es administrador del grupo");
-        }
-
-        List<String> camposObligatorios = List.of(grupoModificado.getNombre_grupo());
-        if (!ValidacionUtils.camposValidos(camposObligatorios)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Campos inválidos");
-        }
-
         try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            List<String> camposObligatorios = List.of(grupoModificado.getNombre_grupo());
+            if (!ValidacionUtils.camposValidos(camposObligatorios)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Campos inválidos");
+            }
+
             // En el caso de que no se haya pasado el id del usuario creador
             if (grupoModificado.getId_usuario_creador() == null) {
                 Long idUsuarioCreador = gruposRepository.findIdUsuarioCreadorByIdGrupo(idGrupo);
@@ -154,9 +191,13 @@ public class GruposService {
     }
 
     public ResponseEntity<?> leaveGrupo(Long idGrupo) {
-        Long idUsuarioAutenticado = obtenerIdDelToken();
-
         try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
             if (!gruposRepository.usuarioPerteneceAlGrupo(idUsuarioAutenticado, idGrupo)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("El usuario no pertenece al grupo");
@@ -174,12 +215,5 @@ public class GruposService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
-    }
-
-    private Long obtenerIdDelToken() {
-        Authentication authentication = SecurityContextHolder.getContext()
-                .getAuthentication();
-        UsuarioAutenticado usuario = (UsuarioAutenticado) authentication.getPrincipal();
-        return usuario.id();
     }
 }

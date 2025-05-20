@@ -6,6 +6,7 @@ import com.chatterbox.api_rest.dto.usuario.UsuarioResponseDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import com.chatterbox.api_rest.repository.UsuariosRepository;
 import com.chatterbox.api_rest.security.JwtUtil;
+import com.chatterbox.api_rest.util.AuthUtils;
 import com.chatterbox.api_rest.util.ValidacionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ public class UsuariosService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final JwtUtil jwtUtil;
+    private final AuthUtils authUtils;
 
     // Modificar objeto respuesta
     public ResponseEntity<?> getUsuarioById(Long idUsuario) {
@@ -64,13 +66,18 @@ public class UsuariosService {
     }
 
     public ResponseEntity<?> editUsuario(Long idUsuario, UsuarioRequestDto usuarioModificado) {
-        List<String> camposObligatorios = List.of(usuarioModificado.getApodo(), usuarioModificado.getNombre_usuario(), usuarioModificado.getEmail(), usuarioModificado.getPassword());
-        if (!ValidacionUtils.camposValidos(camposObligatorios)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Campos inválidos");
-        }
-
         try {
+            if (authUtils.usuarioNoEncontrado(idUsuario)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            List<String> camposObligatorios = List.of(usuarioModificado.getApodo(), usuarioModificado.getNombre_usuario(), usuarioModificado.getEmail());
+            if (!ValidacionUtils.camposValidos(camposObligatorios)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Campos inválidos");
+            }
+
             Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioByApodoOrEmailAndDifferentId(idUsuario, usuarioModificado.getApodo(), usuarioModificado.getEmail());
             if (usuarioOptional.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
