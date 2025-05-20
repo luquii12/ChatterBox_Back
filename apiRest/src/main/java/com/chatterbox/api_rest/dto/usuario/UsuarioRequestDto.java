@@ -2,6 +2,7 @@ package com.chatterbox.api_rest.dto.usuario;
 
 import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,7 +15,7 @@ public class UsuarioRequestDto {
     private String email;
     private String password;
     private boolean es_admin_general;
-    private String foto_perfil;
+    private MultipartFile foto_perfil; // Para recibir el archivo
 
     public String getPasswordCifrada(PasswordEncoder passwordEncoder) {
         return passwordEncoder.encode(password);

@@ -3,6 +3,7 @@ package com.chatterbox.api_rest.controller;
 import com.chatterbox.api_rest.dto.usuario.UsuarioRequestDto;
 import com.chatterbox.api_rest.service.UsuariosService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,8 +30,8 @@ public class UsuariosController {
         return usuariosService.getGruposDelUsuario(idUsuario);
     }
 
-    @PutMapping("/{idUsuario}")
-    public ResponseEntity<?> editUsuario(@PathVariable Long idUsuario, @RequestBody UsuarioRequestDto usuarioModificado) {
+    @PutMapping(value = "/{idUsuario}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> editUsuario(@PathVariable Long idUsuario, @ModelAttribute UsuarioRequestDto usuarioModificado) {
         return usuariosService.editUsuario(idUsuario, usuarioModificado);
     }
 }

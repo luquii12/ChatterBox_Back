@@ -68,6 +68,6 @@ public class ChatsRepository {
                 .param(1, idChat)
                 .update();
 
-        return filasEliminadasChats > 0;
+        return filasEliminadasChats == 1;
     }
 }

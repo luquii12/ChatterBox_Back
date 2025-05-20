@@ -216,4 +216,32 @@ public class GruposService {
                     .body("Error interno del servidor");
         }
     }
+
+    public ResponseEntity<?> deleteGrupo(Long idGrupo) {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            boolean eliminado = gruposRepository.deleteGrupo(idGrupo);
+            if (!eliminado) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se ha podido eliminar el grupo");
+            }
+
+            return ResponseEntity.noContent()
+                    .build();
+        } catch (Exception e) {
+            log.error("Error inesperado al eliminar el grupo", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
 }

@@ -40,6 +40,16 @@ public class GruposController {
         return gruposService.leaveGrupo(idGrupo);
     }
 
+    @DeleteMapping("/{idGrupo}")
+    public ResponseEntity<?> deleteGrupo(@PathVariable Long idGrupo) {
+        return gruposService.deleteGrupo(idGrupo);
+    }
+
+    @GetMapping("/{idGrupo}/chats")
+    public ResponseEntity<?> getChatsDeUnGrupo(@PathVariable Long idGrupo) {
+        return gruposService.getChatsDeUnGrupo(idGrupo);
+    }
+
     @GetMapping("/{idGrupo}")
     public ResponseEntity<?> getGrupoPorId(@PathVariable Long idGrupo) {
         return null;
@@ -48,11 +58,6 @@ public class GruposController {
     @GetMapping("/{idGrupo}/administradores")
     public ResponseEntity<?> getAdministradoresDeUnGrupo(@PathVariable Long idGrupo) {
         return null;
-    }
-
-    @GetMapping("/{idGrupo}/chats")
-    public ResponseEntity<?> getChatsDeUnGrupo(@PathVariable Long idGrupo) {
-        return gruposService.getChatsDeUnGrupo(idGrupo);
     }
 
     // Puede que sea de chats y no grupos

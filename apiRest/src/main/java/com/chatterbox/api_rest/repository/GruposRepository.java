@@ -136,4 +136,17 @@ public class GruposRepository {
                 .param(3, fechaInscripcion)
                 .update();
     }
+
+    @Transactional
+    public boolean deleteGrupo(Long idGrupo) {
+        jdbcClient.sql("DELETE FROM usuarios_grupos WHERE id_grupo = ?")
+                .param(1, idGrupo)
+                .update();
+
+        int filasEliminadasGrupos = jdbcClient.sql("DELETE FROM grupos WHERE id_grupo = ?")
+                .param(1, idGrupo)
+                .update();
+
+        return filasEliminadasGrupos == 1;
+    }
 }

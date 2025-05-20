@@ -15,7 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,12 +90,13 @@ public class UsuariosService {
             }
 
             // Si no se ha cambiado la foto se le asigna la que tenía
-            String fotoPerfil;
+            String rutaFotoPerfil;
             if (usuarioModificado.getFoto_perfil() == null || usuarioModificado.getFoto_perfil()
                     .isEmpty()) {
-                fotoPerfil = usuariosRepository.findFotoPerfilByIdUsuario(idUsuario);
+                rutaFotoPerfil = usuariosRepository.findFotoPerfilByIdUsuario(idUsuario);
             } else {
-                fotoPerfil = usuarioModificado.getFoto_perfil();
+                // Guardar la img en la carpeta img/
+                rutaFotoPerfil = guardarArchivoFotoPerfil(usuarioModificado.getFoto_perfil(), idUsuario);
             }
 
             // Si no se ha cambiado la contraseña se le asigna la que tenía
@@ -128,5 +134,32 @@ public class UsuariosService {
         respuesta.put("usuario", usuarioResponse);
         respuesta.put("token", token);
         return respuesta;
+    }
+
+    // ¿Por qué la excepción y cómo la puedo controlar?
+    private String guardarArchivoFotoPerfil(MultipartFile archivo, Long idUsuario) {
+        // La primera comprobación me la puedo ahorrar ya que la hago antes de llamar al método
+
+        String carpetaDestino = ""; // Debería recuperarlo del application.properties
+        Path rutaCarpeta = Paths.get(carpetaDestino);
+        // Me puedo ahorrar la comprobación de que la carpeta de destino no exista, ya que la creo manualmente y no la vuelvo a editar
+
+        // Generar un nombre único para el archivo
+        String extension = "";
+
+        // Extraer la extensión original (si la hay)
+        String nombreOriginal = archivo.getOriginalFilename();
+        if (nombreOriginal != null && nombreOriginal.contains(".")) {
+            extension = nombreOriginal.substring(nombreOriginal.lastIndexOf("."));
+        }
+
+        String nombreArchivo = "usuario_" + idUsuario + "_" + System.currentTimeMillis() + extension;
+
+        Path destino = rutaCarpeta.resolve(nombreArchivo);
+
+        // Guardar el archivo en la ruta de destino
+        Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+
+        return nombreArchivo; // ¿Nombre o ruta? Pq puede que tenga una subcarpeta para fotos de perfil y otra para fotos de grupo
     }
 }
