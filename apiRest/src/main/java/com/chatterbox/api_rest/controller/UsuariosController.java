@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class UsuariosController {
     private final UsuariosService usuariosService;
 
@@ -33,5 +32,10 @@ public class UsuariosController {
     @PutMapping(value = "/{idUsuario}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> editUsuario(@PathVariable Long idUsuario, @ModelAttribute UsuarioRequestDto usuarioModificado) {
         return usuariosService.editUsuario(idUsuario, usuarioModificado);
+    }
+
+    @GetMapping("/foto-perfil")
+    public ResponseEntity<?> getFotoPerfil() {
+        return usuariosService.getFotoPerfil();
     }
 }

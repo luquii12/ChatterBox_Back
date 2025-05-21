@@ -175,7 +175,7 @@ public class GruposService {
 
             // Si no se ha cambiado la foto se le asigna la que tenía
             if (grupoModificado.getFoto_grupo() == null || grupoModificado.getFoto_grupo()
-                    .isEmpty()) {
+                    .isBlank()) {
                 grupoModificado.setFoto_grupo(gruposRepository.findFotoGrupoByIdGrupo(idGrupo));
             }
 
@@ -184,7 +184,7 @@ public class GruposService {
 
             return ResponseEntity.ok(grupoModificado);
         } catch (Exception e) {
-            log.error("Error inesperado durante el registro de los cambios del grupo", e);
+            log.error("Error inesperado al actualizar los datos del grupo", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }

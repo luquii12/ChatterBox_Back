@@ -14,7 +14,7 @@ public class ChatterBoxConfig implements WebMvcConfigurer {
         return new ModelMapper();
     }
 
-    // Configuración para servir la carpeta /img como recurso estático
+    // Configuración para servir la carpeta img/ como recurso estático
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/img/**")

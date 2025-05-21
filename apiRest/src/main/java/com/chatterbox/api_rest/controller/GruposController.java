@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/grupos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class GruposController {
     private final GruposService gruposService;
 

@@ -92,6 +92,7 @@ public class UsuariosRepository {
 
     public String findHashPasswordByIdUsuario(Long idUsuario) {
         return jdbcClient.sql("SELECT hash_password FROM usuarios WHERE id_usuario = ?")
+                .param(1, idUsuario)
                 .query(String.class)
                 .single();
     }

@@ -11,12 +11,17 @@ import com.chatterbox.api_rest.util.ValidacionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +40,9 @@ public class UsuariosService {
     private final ModelMapper modelMapper;
     private final JwtUtil jwtUtil;
     private final AuthUtils authUtils;
+
+    @Value("${app.ruta.imagenes.perfil}")
+    private String carpetaDestino;
 
     // Modificar objeto respuesta
     public ResponseEntity<?> getUsuarioById(Long idUsuario) {
@@ -89,23 +97,26 @@ public class UsuariosService {
                         .body("Ya existe un usuario con el mismo apodo o email");
             }
 
-            // Si no se ha cambiado la foto se le asigna la que tenía
-            String rutaFotoPerfil;
-            if (usuarioModificado.getFoto_perfil() == null || usuarioModificado.getFoto_perfil()
-                    .isEmpty()) {
-                rutaFotoPerfil = usuariosRepository.findFotoPerfilByIdUsuario(idUsuario);
+            String fotoPerfilString;
+            String fotoAntiguaString = usuariosRepository.findFotoPerfilByIdUsuario(idUsuario);
+            if (fotoNoCambiada(usuarioModificado.getFoto_perfil())) {
+                fotoPerfilString = fotoAntiguaString;
             } else {
-                // Guardar la img en la carpeta img/
-                rutaFotoPerfil = guardarArchivoFotoPerfil(usuarioModificado.getFoto_perfil(), idUsuario);
+                try {
+                    fotoPerfilString = guardarArchivoFotoPerfil(usuarioModificado.getFoto_perfil(), idUsuario);
+                    eliminarArchivoFotoPerfilAnterior(fotoAntiguaString);
+                } catch (IOException e) {
+                    log.error("Error al guardar la foto de perfil", e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Error al guardar la imagen");
+                }
             }
 
-            // Si no se ha cambiado la contraseña se le asigna la que tenía
             String hashPasswordFinal;
-            if (usuarioModificado.getPassword() != null && !usuarioModificado.getPassword()
-                    .isEmpty()) {
-                hashPasswordFinal = usuarioModificado.getPasswordCifrada(passwordEncoder);
-            } else {
+            if (passwordNoCambiada(usuarioModificado.getPassword())) {
                 hashPasswordFinal = usuariosRepository.findHashPasswordByIdUsuario(idUsuario);
+            } else {
+                hashPasswordFinal = usuarioModificado.getPasswordCifrada(passwordEncoder);
             }
 
             UsuarioBdDto usuarioBd = UsuarioBdDto.builder()
@@ -114,17 +125,99 @@ public class UsuariosService {
                     .nombre_usuario(usuarioModificado.getNombre_usuario())
                     .email(usuarioModificado.getEmail())
                     .hash_password(hashPasswordFinal)
-                    .foto_perfil(fotoPerfil)
+                    .foto_perfil(fotoPerfilString)
                     .build();
 
             usuariosRepository.updateUsuario(usuarioBd);
 
             return ResponseEntity.ok(prepararRespuestaConToken(usuarioBd));
         } catch (Exception e) {
-            log.error("Error inesperado durante el registro de los cambios del usuario", e);
+            log.error("Error inesperado al actualizar los datos del usuario", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
+    }
+
+    public ResponseEntity<?> getFotoPerfil() {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            String nombreArchivo = usuariosRepository.findFotoPerfilByIdUsuario(idUsuarioAutenticado);
+            if (nombreArchivo == null || nombreArchivo.isBlank()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("No hay foto de perfil");
+            }
+
+            Path rutaArchivo = Paths.get(carpetaDestino)
+                    .resolve(nombreArchivo)
+                    .normalize(); // Eliminar cosas raras que pueda haber en la ruta ("..", ".", etc)
+            if (!rutaArchivo.startsWith(Paths.get(carpetaDestino)) || !Files.exists(rutaArchivo)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Archivo no encontrado");
+            }
+
+            Resource recurso = new UrlResource(rutaArchivo.toUri());
+
+            String contentType = Files.probeContentType(rutaArchivo);
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(recurso);
+        } catch (Exception e) {
+            log.error("Error inesperado al obtener la foto de perfil", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    private boolean fotoNoCambiada(MultipartFile foto) {
+        return foto == null || foto.isEmpty();
+    }
+
+    private boolean passwordNoCambiada(String password) {
+        return password == null || password.isBlank();
+    }
+
+    private String guardarArchivoFotoPerfil(MultipartFile archivo, Long idUsuario) throws IOException {
+        Path rutaCarpeta = Paths.get(carpetaDestino);
+        if (!Files.exists(rutaCarpeta)) {
+            Files.createDirectories(rutaCarpeta);
+        }
+        // Detectar tipo MIME --> Para la extensión
+        String tipoMime = archivo.getContentType(); // ¿Puede ser null?
+        String extension;
+
+        switch (tipoMime) {
+            case "image/jpg", "image/jpeg" -> extension = "jpg";
+            case "image/png" -> extension = "png";
+            case "image/webp" -> extension = "webp";
+            case "image/avif" -> extension = "avif";
+            default -> throw new IOException("Tipo MIME no permitido: " + tipoMime);
+        }
+
+        // Generar un nombre único para el archivo
+        String nombreArchivo = "usuario_" + idUsuario + "_" + System.currentTimeMillis() + "." + extension;
+        Path destino = rutaCarpeta.resolve(nombreArchivo);
+
+        // Guardar el archivo en la ruta de destino
+        Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+
+        return nombreArchivo;
+    }
+
+    private void eliminarArchivoFotoPerfilAnterior(String nombreArchivo) throws IOException {
+        if (nombreArchivo == null || nombreArchivo.isBlank()) return;
+
+        Path rutaArchivo = Paths.get(carpetaDestino, nombreArchivo);
+
+        Files.deleteIfExists(rutaArchivo);
     }
 
     private Map<String, Object> prepararRespuestaConToken(UsuarioBdDto usuarioBd) {
@@ -134,32 +227,5 @@ public class UsuariosService {
         respuesta.put("usuario", usuarioResponse);
         respuesta.put("token", token);
         return respuesta;
-    }
-
-    // ¿Por qué la excepción y cómo la puedo controlar?
-    private String guardarArchivoFotoPerfil(MultipartFile archivo, Long idUsuario) {
-        // La primera comprobación me la puedo ahorrar ya que la hago antes de llamar al método
-
-        String carpetaDestino = ""; // Debería recuperarlo del application.properties
-        Path rutaCarpeta = Paths.get(carpetaDestino);
-        // Me puedo ahorrar la comprobación de que la carpeta de destino no exista, ya que la creo manualmente y no la vuelvo a editar
-
-        // Generar un nombre único para el archivo
-        String extension = "";
-
-        // Extraer la extensión original (si la hay)
-        String nombreOriginal = archivo.getOriginalFilename();
-        if (nombreOriginal != null && nombreOriginal.contains(".")) {
-            extension = nombreOriginal.substring(nombreOriginal.lastIndexOf("."));
-        }
-
-        String nombreArchivo = "usuario_" + idUsuario + "_" + System.currentTimeMillis() + extension;
-
-        Path destino = rutaCarpeta.resolve(nombreArchivo);
-
-        // Guardar el archivo en la ruta de destino
-        Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
-
-        return nombreArchivo; // ¿Nombre o ruta? Pq puede que tenga una subcarpeta para fotos de perfil y otra para fotos de grupo
     }
 }
