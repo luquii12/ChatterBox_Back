@@ -1,7 +1,7 @@
 -- Usuarios
 INSERT INTO usuarios (apodo, nombre_usuario, email, hash_password, es_admin_general, foto_perfil)
 VALUES ('lucasDev', 'Lucas', 'lucas@example.com', '$2a$10$q/pAQNTBCg.4tUfYVrb0xe3tKULxJAQ3xcMTXvnjSbvU4HHcTS0Dq', TRUE,
-        'https://example.com/perfil1.jpg'), -- Contraseña: 1234
+        NULL), -- Contraseña: 1234
        ('anaCoder', 'Ana', 'ana@example.com', '$2a$10$DEbzgJ6FSgCJaZEC52VZIu0deDUHtw/aOTp10PEtvMorw2bSiN6oC', FALSE,
         NULL),                              -- Contraseña: 1234
        ('david123', 'David', 'david@example.com', '$2a$10$khWNrSTXaNM4IlaIJ3R7ZO3iFCOFz24CePFzo89M7QFGkOYXml4A2', FALSE,

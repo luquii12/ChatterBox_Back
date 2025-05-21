@@ -44,7 +44,7 @@ public class UsuariosService {
     @Value("${app.ruta.imagenes.perfil}")
     private String carpetaDestino;
 
-    // Modificar objeto respuesta
+    // Modificar objeto respuesta a UsuarioResponseDto
     public ResponseEntity<?> getUsuarioById(Long idUsuario) {
         try {
             Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
@@ -190,18 +190,8 @@ public class UsuariosService {
         if (!Files.exists(rutaCarpeta)) {
             Files.createDirectories(rutaCarpeta);
         }
-        // Detectar tipo MIME --> Para la extensión
-        String tipoMime = archivo.getContentType(); // ¿Puede ser null?
-        String extension;
 
-        switch (tipoMime) {
-            case "image/jpg", "image/jpeg" -> extension = "jpg";
-            case "image/png" -> extension = "png";
-            case "image/webp" -> extension = "webp";
-            case "image/avif" -> extension = "avif";
-            default -> throw new IOException("Tipo MIME no permitido: " + tipoMime);
-        }
-
+        String extension = obtenerExtensionPorMime(archivo);
         // Generar un nombre único para el archivo
         String nombreArchivo = "usuario_" + idUsuario + "_" + System.currentTimeMillis() + "." + extension;
         Path destino = rutaCarpeta.resolve(nombreArchivo);
@@ -210,6 +200,30 @@ public class UsuariosService {
         Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
 
         return nombreArchivo;
+    }
+
+    private String obtenerExtensionPorMime(MultipartFile archivo) throws IOException {
+        String tipoMime = archivo.getContentType();
+
+        if (tipoMime == null) {
+            throw new IOException("No se pudo determinar el tipo MIME del archivo");
+        }
+
+        switch (tipoMime) {
+            case "image/jpg", "image/jpeg" -> {
+                return "jpg";
+            }
+            case "image/png" -> {
+                return "png";
+            }
+            case "image/webp" -> {
+                return "webp";
+            }
+            case "image/avif" -> {
+                return "avif";
+            }
+            default -> throw new IOException("Tipo MIME no permitido: " + tipoMime);
+        }
     }
 
     private void eliminarArchivoFotoPerfilAnterior(String nombreArchivo) throws IOException {
