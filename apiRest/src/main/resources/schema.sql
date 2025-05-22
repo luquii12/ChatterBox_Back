@@ -16,13 +16,12 @@ CREATE TABLE usuarios
 (
     id_usuario       BIGINT AUTO_INCREMENT PRIMARY KEY,
     apodo            VARCHAR(255) UNIQUE NOT NULL,
-    nombre_usuario   VARCHAR(255)        NOT NULL, -- Por ahora no lo vamos a usar. En el futuro puede que sí
+    nombre_usuario   VARCHAR(255)        NOT NULL,                                  -- Por ahora no lo vamos a usar. En el futuro puede que sí
     email            VARCHAR(255) UNIQUE NOT NULL,
     hash_password    VARCHAR(255)        NOT NULL,
     es_admin_general BOOLEAN             NOT NULL DEFAULT FALSE,
-    foto_perfil      VARCHAR(255)                  -- Opcional para el futuro: se guarda solo la url de donde se encuentra
+    foto_perfil      VARCHAR(255)        NOT NULL DEFAULT 'foto_perfil_default.png' -- Opcional para el futuro: se guarda solo la url de donde se encuentra
 );
-
 
 # Tabla grupos
 CREATE TABLE grupos
@@ -32,7 +31,7 @@ CREATE TABLE grupos
     descripcion        VARCHAR(255),
     nombre_grupo       VARCHAR(255) NOT NULL,
     es_privado         BOOLEAN      NOT NULL DEFAULT FALSE,
-    foto_grupo         VARCHAR(255), -- Opcional para el futuro: se guarda solo la url de donde se encuentra
+    foto_grupo         VARCHAR(255) NOT NULL,
     CONSTRAINT fk_grupos_usuarios_creadores FOREIGN KEY (id_usuario_creador) REFERENCES usuarios (id_usuario) ON DELETE CASCADE
 );
 

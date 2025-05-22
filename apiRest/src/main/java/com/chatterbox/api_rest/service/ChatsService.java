@@ -27,11 +27,11 @@ public class ChatsService {
     private final UsuariosRepository usuariosRepository;
     private final AuthUtils authUtils;
 
-    public ResponseEntity<?> getAllMensajesDelChat(Long idChat) {
+    public ResponseEntity<?> getMensajesDelChat(Long idChat, @Nullable Integer limite) {
         try {
             Optional<ChatDto> grupoOptional = chatsRepository.findChatById(idChat);
             if (grupoOptional.isPresent()) {
-                List<ChatMensajeDto> mensajesChat = chatsRepository.findMensajesByChatIdOrderByHoraEnvio(idChat);
+                List<ChatMensajeDto> mensajesChat = chatsRepository.findMensajesByChatIdOrderByHoraEnvioLimitDeterminado(idChat, limite);
                 if (!mensajesChat.isEmpty()) {
                     return ResponseEntity.ok(mensajesChat);
                 }
@@ -45,11 +45,11 @@ public class ChatsService {
         }
     }
 
-    public ResponseEntity<?> getMensajesDelChat(Long idChat, @Nullable Integer limite) {
+    public ResponseEntity<?> getAllMensajesDelChat(Long idChat) {
         try {
             Optional<ChatDto> grupoOptional = chatsRepository.findChatById(idChat);
             if (grupoOptional.isPresent()) {
-                List<ChatMensajeDto> mensajesChat = chatsRepository.findMensajesByChatIdOrderByHoraEnvioLimitDeterminado(idChat, limite);
+                List<ChatMensajeDto> mensajesChat = chatsRepository.findMensajesByChatIdOrderByHoraEnvio(idChat);
                 if (!mensajesChat.isEmpty()) {
                     return ResponseEntity.ok(mensajesChat);
                 }

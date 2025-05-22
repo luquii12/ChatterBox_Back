@@ -2,6 +2,7 @@ package com.chatterbox.api_rest.repository;
 
 import com.chatterbox.api_rest.dto.grupo.ChatDeUnGrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
+import com.chatterbox.api_rest.dto.grupo.GrupoEditDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -33,12 +34,11 @@ public class GruposRepository {
 
     @Transactional
     public Long insertGrupo(GrupoDto nuevoGrupo) {
-        jdbcClient.sql("INSERT INTO grupos (id_usuario_creador, descripcion, nombre_grupo, es_privado, foto_grupo) VALUES (?, ?, ?, ?, ?)")
+        jdbcClient.sql("INSERT INTO grupos (id_usuario_creador, descripcion, nombre_grupo, es_privado) VALUES (?, ?, ?, ?)")
                 .param(1, nuevoGrupo.getId_usuario_creador())
                 .param(2, nuevoGrupo.getDescripcion())
                 .param(3, nuevoGrupo.getNombre_grupo())
                 .param(4, nuevoGrupo.isEs_privado())
-                .param(5, nuevoGrupo.getFoto_grupo())
                 .update();
 
         Long id = jdbcClient.sql("SELECT LAST_INSERT_ID()")
@@ -53,7 +53,14 @@ public class GruposRepository {
         return id;
     }
 
-    public Optional<GrupoDto> findGrupoByNombreAndIdUsuarioCreadorAndDifferentId(Long idGrupo, GrupoDto grupoModificado) {
+    public void updateFotoGrupo(Long idGrupo, String fotoGrupo) {
+        jdbcClient.sql("UPDATE grupos SET foto_grupo = ? WHERE id_grupo = ?")
+                .param(1, fotoGrupo)
+                .param(2, idGrupo)
+                .update();
+    }
+
+    public Optional<GrupoDto> findGrupoByNombreAndIdUsuarioCreadorAndDifferentId(Long idGrupo, GrupoEditDto grupoModificado) {
         return jdbcClient.sql("SELECT * FROM grupos WHERE nombre_grupo = ? AND id_usuario_creador = ? AND id_grupo != ?")
                 .param(1, grupoModificado.getNombre_grupo())
                 .param(2, grupoModificado.getId_usuario_creador())
@@ -148,5 +155,12 @@ public class GruposRepository {
                 .update();
 
         return filasEliminadasGrupos == 1;
+    }
+
+    public String findFotoPerfilByIdGrupo(Long idGrupo) {
+        return jdbcClient.sql("SELECT foto_grupo FROM grupos WHERE id_grupo = ?")
+                .param(1, idGrupo)
+                .query(String.class)
+                .single();
     }
 }

@@ -54,11 +54,12 @@ public class UsuariosRepository {
     }
 
     public Long insertUsuario(UsuarioBdDto nuevoUsuario) {
-        jdbcClient.sql("INSERT INTO usuarios (apodo, nombre_usuario, email, hash_password) VALUES (?, ?, ?, ?)")
+        jdbcClient.sql("INSERT INTO usuarios (apodo, nombre_usuario, email, hash_password, foto_perfil) VALUES (?, ?, ?, ?, ?)")
                 .param(1, nuevoUsuario.getApodo())
                 .param(2, nuevoUsuario.getNombre_usuario())
                 .param(3, nuevoUsuario.getEmail())
                 .param(4, nuevoUsuario.getHash_password())
+                .param(5, nuevoUsuario.getFoto_perfil())
                 .update();
 
         return jdbcClient.sql("SELECT id_usuario FROM usuarios WHERE email = ?")

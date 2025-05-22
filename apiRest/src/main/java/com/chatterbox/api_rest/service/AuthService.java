@@ -75,6 +75,7 @@ public class AuthService {
                     .nombre_usuario(nuevoUsuario.getNombre_usuario())
                     .email(nuevoUsuario.getEmail())
                     .hash_password(nuevoUsuario.getPasswordCifrada(passwordEncoder))
+                    .foto_perfil("foto_perfil_default.png")
                     .build();
 
             Long id = usuariosRepository.insertUsuario(usuarioBd);

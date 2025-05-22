@@ -2,13 +2,16 @@ package com.chatterbox.api_rest.service;
 
 import com.chatterbox.api_rest.dto.grupo.ChatDeUnGrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
+import com.chatterbox.api_rest.dto.grupo.GrupoEditDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import com.chatterbox.api_rest.repository.GruposRepository;
 import com.chatterbox.api_rest.util.AuthUtils;
+import com.chatterbox.api_rest.util.ImgUtils;
 import com.chatterbox.api_rest.util.ValidacionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -16,7 +19,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -30,55 +36,8 @@ public class GruposService {
     private final AuthUtils authUtils;
     private final ModelMapper modelMapper;
 
-    public ResponseEntity<?> createGrupo(GrupoDto nuevoGrupo) {
-        try {
-            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
-            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Usuario no encontrado");
-            }
-
-            nuevoGrupo.setId_usuario_creador(idUsuarioAutenticado);
-
-            List<String> camposObligatorios = List.of(nuevoGrupo.getNombre_grupo());
-            if (!ValidacionUtils.camposValidos(camposObligatorios)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Credenciales inválidas");
-            }
-
-            Long id = gruposRepository.insertGrupo(nuevoGrupo);
-            nuevoGrupo.setId_grupo(id);
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(nuevoGrupo);
-        } catch (DuplicateKeyException e) {
-            log.error("Error al agregar grupo ", e);
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Grupo ya existente para ese usuario");
-        } catch (Exception e) {
-            log.error("Error inesperado al crear el grupo", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno del servidor");
-        }
-    }
-
-    public ResponseEntity<?> getChatsDeUnGrupo(Long idGrupo) {
-        try {
-            Optional<GrupoDto> grupoOptional = gruposRepository.findGrupoById(idGrupo);
-            if (grupoOptional.isPresent()) {
-                List<ChatDeUnGrupoDto> chatsGrupo = gruposRepository.findChatsByGrupoIdOrderByFechaCreacion(idGrupo);
-                if (!chatsGrupo.isEmpty()) {
-                    return ResponseEntity.ok(chatsGrupo);
-                }
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("No existe el grupo buscado");
-        } catch (Exception e) {
-            log.error("Error al obtener los chats del grupo con id {}", idGrupo);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno del servidor");
-        }
-    }
+    @Value("${app.ruta.imagenes.grupo}")
+    private String carpetaDestino;
 
     public ResponseEntity<?> getGruposPublicosPorNombreWhereUsuarioNoEste(String nombre, Pageable pageable) {
         if (nombre == null || nombre.isBlank()) {
@@ -104,6 +63,82 @@ public class GruposService {
         }
     }
 
+    public ResponseEntity<?> getChatsDeUnGrupo(Long idGrupo) {
+        try {
+            Optional<GrupoDto> grupoOptional = gruposRepository.findGrupoById(idGrupo);
+            if (grupoOptional.isPresent()) {
+                List<ChatDeUnGrupoDto> chatsGrupo = gruposRepository.findChatsByGrupoIdOrderByFechaCreacion(idGrupo);
+                if (!chatsGrupo.isEmpty()) {
+                    return ResponseEntity.ok(chatsGrupo);
+                }
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el grupo buscado");
+        } catch (Exception e) {
+            log.error("Error al obtener los chats del grupo con id {}", idGrupo);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    public ResponseEntity<?> getFotoGrupo(Long idGrupo) {
+        String nombreArchivo = gruposRepository.findFotoPerfilByIdGrupo(idGrupo);
+        return ImgUtils.obtenerImgComoResponse(nombreArchivo, carpetaDestino);
+    }
+
+    public ResponseEntity<?> createGrupo(GrupoEditDto nuevoGrupo) {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            List<String> camposObligatorios = List.of(nuevoGrupo.getNombre_grupo());
+            if (!ValidacionUtils.camposValidos(camposObligatorios) && noHayFotoNueva(nuevoGrupo.getFoto_grupo())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Credenciales inválidas");
+            }
+
+            GrupoDto grupoResponse = GrupoDto.builder()
+                    .id_usuario_creador(idUsuarioAutenticado)
+                    .nombre_grupo(nuevoGrupo.getNombre_grupo())
+                    .descripcion(nuevoGrupo.getDescripcion())
+                    .es_privado(nuevoGrupo.isEs_privado())
+                    .build();
+
+            Long id = gruposRepository.insertGrupo(grupoResponse);
+            grupoResponse.setId_grupo(id);
+
+            String fotoGrupoString;
+            try {
+                fotoGrupoString = ImgUtils.guardarImg(nuevoGrupo.getFoto_grupo(), id, carpetaDestino, "grupo");
+            } catch (IOException e) {
+                log.error("Error al guardar la foto del grupo", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error al guardar la imagen");
+            }
+
+            gruposRepository.updateFotoGrupo(id, fotoGrupoString);
+            grupoResponse.setFoto_grupo(fotoGrupoString);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(grupoResponse);
+        } catch (MaxUploadSizeExceededException e) {
+            log.error("Error al subir la imagen ", e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("La imagen supera el tamaño límite de 5MB");
+        } catch (DuplicateKeyException e) {
+            log.error("Error al agregar grupo ", e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Grupo ya existente para ese usuario");
+        } catch (Exception e) {
+            log.error("Error inesperado al crear el grupo", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     public ResponseEntity<?> joinGrupo(Long idGrupo) {
         try {
             Optional<GrupoDto> grupoOptional = gruposRepository.findGrupoById(idGrupo);
@@ -118,7 +153,6 @@ public class GruposService {
                         .body("Usuario no encontrado");
             }
 
-            // Usuario está en el grupo
             if (gruposRepository.usuarioPerteneceAlGrupo(idUsuarioAutenticado, idGrupo)) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("El usuario ya pertenece al grupo");
@@ -142,7 +176,7 @@ public class GruposService {
         }
     }
 
-    public ResponseEntity<?> editGrupo(Long idGrupo, GrupoDto grupoModificado) {
+    public ResponseEntity<?> editGrupo(Long idGrupo, GrupoEditDto grupoModificado) {
         try {
             Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
             if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
@@ -173,16 +207,33 @@ public class GruposService {
                         .body("Ya existe un grupo creado por el mismo usuario con el mismo nombre");
             }
 
-            // Si no se ha cambiado la foto se le asigna la que tenía
-            if (grupoModificado.getFoto_grupo() == null || grupoModificado.getFoto_grupo()
-                    .isBlank()) {
-                grupoModificado.setFoto_grupo(gruposRepository.findFotoGrupoByIdGrupo(idGrupo));
+            String fotoGrupoString;
+            String fotoAntiguaString = gruposRepository.findFotoGrupoByIdGrupo(idGrupo);
+            if (noHayFotoNueva(grupoModificado.getFoto_grupo())) {
+                fotoGrupoString = fotoAntiguaString;
+            } else {
+                try {
+                    fotoGrupoString = ImgUtils.guardarImg(grupoModificado.getFoto_grupo(), idGrupo, carpetaDestino, "grupo");
+                    ImgUtils.eliminarImgAnterior(fotoAntiguaString, carpetaDestino);
+                } catch (IOException e) {
+                    log.error("Error al guardar la foto del grupo", e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Error al guardar la imagen");
+                }
             }
 
-            grupoModificado.setId_grupo(idGrupo);
-            gruposRepository.updateGrupo(grupoModificado);
+            GrupoDto grupoResponse = GrupoDto.builder()
+                    .id_grupo(idGrupo)
+                    .id_usuario_creador(grupoModificado.getId_usuario_creador())
+                    .nombre_grupo(grupoModificado.getNombre_grupo())
+                    .descripcion(grupoModificado.getDescripcion())
+                    .es_privado(grupoModificado.isEs_privado())
+                    .foto_grupo(fotoGrupoString)
+                    .build();
 
-            return ResponseEntity.ok(grupoModificado);
+            gruposRepository.updateGrupo(grupoResponse);
+
+            return ResponseEntity.ok(grupoResponse);
         } catch (Exception e) {
             log.error("Error inesperado al actualizar los datos del grupo", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -243,5 +294,9 @@ public class GruposService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
+    }
+
+    private boolean noHayFotoNueva(MultipartFile foto) {
+        return foto == null || foto.isEmpty();
     }
 }

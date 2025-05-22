@@ -18,12 +18,6 @@ public class UsuariosController {
         return usuariosService.getUsuarioById(idUsuario);
     }
 
-    // Opcional: Añadir paginación en el futuro para controlarlos mejor
-    @GetMapping("/{idUsuario}/mensajes")
-    public ResponseEntity<?> getMensajesDeUnUsuario(@PathVariable Long idUsuario) {
-        return null;
-    }
-
     @GetMapping("/{idUsuario}/grupos")
     public ResponseEntity<?> getGruposDeUnUsuario(@PathVariable Long idUsuario) {
         return usuariosService.getGruposDelUsuario(idUsuario);
@@ -34,8 +28,8 @@ public class UsuariosController {
         return usuariosService.editUsuario(idUsuario, usuarioModificado);
     }
 
-    @GetMapping("/foto-perfil")
-    public ResponseEntity<?> getFotoPerfil() {
-        return usuariosService.getFotoPerfil();
+    @GetMapping("/{idUsuario}/foto-perfil")
+    public ResponseEntity<?> getFotoPerfil(@PathVariable Long idUsuario) {
+        return usuariosService.getFotoPerfil(idUsuario);
     }
 }
