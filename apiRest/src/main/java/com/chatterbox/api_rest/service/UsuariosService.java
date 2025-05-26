@@ -13,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,12 +41,33 @@ public class UsuariosService {
     @Value("${app.ruta.imagenes.perfil}")
     private String carpetaDestino;
 
-    // Modificar objeto respuesta a UsuarioResponseDto
+    public ResponseEntity<?> getAllUsuarios(Pageable pageable) {
+        try {
+            int total = usuariosRepository.countUsuarios();
+            if (total == 0) {
+                return ResponseEntity.noContent()
+                        .build();
+            }
+
+            List<UsuarioBdDto> usuariosBd = usuariosRepository.findAllUsuarios(pageable);
+            List<UsuarioResponseDto> usuariosResponse = usuariosBd.stream()
+                    .map(u -> modelMapper.map(u, UsuarioResponseDto.class))
+                    .toList();
+            Page<UsuarioResponseDto> page = new PageImpl<>(usuariosResponse, pageable, total);
+
+            return ResponseEntity.ok(page);
+        } catch (Exception e) {
+            log.error("Error inesperado durante la búsqueda de los usuarios de la app", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     public ResponseEntity<?> getUsuarioById(Long idUsuario) {
         try {
             Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
             if (usuarioOptional.isPresent()) {
-                return ResponseEntity.ok(usuarioOptional.get());
+                return ResponseEntity.ok(modelMapper.map(usuarioOptional.get(), UsuarioResponseDto.class));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("No existe el usuario buscado");

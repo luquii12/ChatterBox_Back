@@ -3,6 +3,7 @@ package com.chatterbox.api_rest.repository;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +14,25 @@ import java.util.Optional;
 @Repository
 public class UsuariosRepository {
     private final JdbcClient jdbcClient;
+
+    public int countUsuarios() {
+        Optional<Integer> numOptional = jdbcClient.sql("SELECT COUNT(*) FROM usuarios")
+                .query(Integer.class)
+                .optional();
+
+        return numOptional.orElse(0);
+    }
+
+    public List<UsuarioBdDto> findAllUsuarios(Pageable pageable) {
+        int pageSize = pageable.getPageSize();
+        int offset = (int) pageable.getOffset();
+
+        return jdbcClient.sql("SELECT * FROM usuarios ORDER BY apodo LIMIT ? OFFSET ?")
+                .param(1, pageSize)
+                .param(2, offset)
+                .query(UsuarioBdDto.class)
+                .list();
+    }
 
     public Optional<UsuarioBdDto> findUsuarioById(Long idUsuario) {
         return jdbcClient.sql("SELECT * FROM usuarios WHERE id_usuario = ?")
