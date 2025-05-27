@@ -43,10 +43,22 @@ public class UsuariosController {
     }
 
     // Dar/Quitar permisos admin
+    @PutMapping("/{idUsuario}/roles/ADMIN_GENERAL")
+    @PreAuthorize("hasRole('ADMIN_GENERAL')")
+    public ResponseEntity<?> setAdminGeneral(@PathVariable Long idUsuario) {
+//        return usuariosService.setAdminGeneral(idUsuario);
+        return null;
+    }
 
     @DeleteMapping("/{idUsuario}")
     @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<?> deleteUsuario(@PathVariable Long idUsuario) {
         return usuariosService.deleteUsuario(idUsuario);
+    }
+
+    @DeleteMapping("/{idUsuario}/roles/ADMIN_GENERAL")
+    @PreAuthorize("hasRole('ADMIN_GENERAL')")
+    public ResponseEntity<?> deleteAdminGeneral(@PathVariable Long idUsuario) {
+        return null;
     }
 }

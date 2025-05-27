@@ -260,6 +260,9 @@ public class GruposService {
                         .body("No se ha podido abandonar el grupo");
             }
 
+            // Si es el último admin hay que asignar al usuario más longevo como admin
+            // Si es el último usuario del grupo se elimina el grupo
+
             return ResponseEntity.ok("Abandonado el grupo exitosamente");
         } catch (Exception e) {
             log.error("Error inesperado al abandonar el grupo {}", idGrupo, e);
