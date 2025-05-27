@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,6 +15,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UsuariosController {
     private final UsuariosService usuariosService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN_GENERAL')")
+    public ResponseEntity<?> getAllUsuariosExceptoASiMismo(@PageableDefault(size = 10, sort = "apodo") Pageable pageable) {
+        return usuariosService.getAllUsuariosExceptoASiMismo(pageable);
+    }
 
     @GetMapping("/{idUsuario}")
     public ResponseEntity<?> getUsuarioPorId(@PathVariable Long idUsuario) {
@@ -25,18 +32,21 @@ public class UsuariosController {
         return usuariosService.getGruposDelUsuario(idUsuario);
     }
 
-    @PutMapping(value = "/{idUsuario}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> editUsuario(@PathVariable Long idUsuario, @ModelAttribute UsuarioRequestDto usuarioModificado) {
-        return usuariosService.editUsuario(idUsuario, usuarioModificado);
-    }
-
     @GetMapping("/{idUsuario}/foto-perfil")
     public ResponseEntity<?> getFotoPerfil(@PathVariable Long idUsuario) {
         return usuariosService.getFotoPerfil(idUsuario);
     }
 
-    @GetMapping
-        public ResponseEntity<?> getAllUsuarios(@PageableDefault(size = 10, sort = "apodo") Pageable pageable) {
-        return usuariosService.getAllUsuarios(pageable);
+    @PutMapping(value = "/{idUsuario}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> editUsuario(@PathVariable Long idUsuario, @ModelAttribute UsuarioRequestDto usuarioModificado) {
+        return usuariosService.editUsuario(idUsuario, usuarioModificado);
+    }
+
+    // Dar/Quitar permisos admin
+
+    @DeleteMapping("/{idUsuario}")
+    @PreAuthorize("hasRole('ADMIN_GENERAL')")
+    public ResponseEntity<?> deleteUsuario(@PathVariable Long idUsuario) {
+        return usuariosService.deleteUsuario(idUsuario);
     }
 }

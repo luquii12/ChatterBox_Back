@@ -41,15 +41,21 @@ public class UsuariosService {
     @Value("${app.ruta.imagenes.perfil}")
     private String carpetaDestino;
 
-    public ResponseEntity<?> getAllUsuarios(Pageable pageable) {
+    public ResponseEntity<?> getAllUsuariosExceptoASiMismo(Pageable pageable) {
+        Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+        if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Usuario no encontrado");
+        }
+
         try {
-            int total = usuariosRepository.countUsuarios();
+            int total = usuariosRepository.countUsuariosExceptoASiMismo(idUsuarioAutenticado);
             if (total == 0) {
                 return ResponseEntity.noContent()
                         .build();
             }
 
-            List<UsuarioBdDto> usuariosBd = usuariosRepository.findAllUsuarios(pageable);
+            List<UsuarioBdDto> usuariosBd = usuariosRepository.findAllUsuariosExceptoASiMismo(idUsuarioAutenticado, pageable);
             List<UsuarioResponseDto> usuariosResponse = usuariosBd.stream()
                     .map(u -> modelMapper.map(u, UsuarioResponseDto.class))
                     .toList();
@@ -96,9 +102,15 @@ public class UsuariosService {
         }
     }
 
+    public ResponseEntity<?> getFotoPerfil(Long idUsuario) {
+        String nombreArchivo = usuariosRepository.findFotoPerfilByIdUsuario(idUsuario);
+        return ImgUtils.obtenerImgComoResponse(nombreArchivo, carpetaDestino);
+    }
+
     public ResponseEntity<?> editUsuario(Long idUsuario, UsuarioRequestDto usuarioModificado) {
         try {
-            if (authUtils.usuarioNoEncontrado(idUsuario)) {
+            Optional<UsuarioBdDto> usuarioOpt = usuariosRepository.findUsuarioById(idUsuario);
+            if (usuarioOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Usuario no encontrado");
             }
@@ -156,9 +168,36 @@ public class UsuariosService {
         }
     }
 
-    public ResponseEntity<?> getFotoPerfil(Long idUsuario) {
-        String nombreArchivo = usuariosRepository.findFotoPerfilByIdUsuario(idUsuario);
-        return ImgUtils.obtenerImgComoResponse(nombreArchivo, carpetaDestino);
+    public ResponseEntity<?> deleteUsuario(Long idUsuario) {
+        try {
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
+            if (usuarioOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (esUnicoAdminGeneral(usuarioOptional.get())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se puede eliminar el usuario");
+            }
+
+            boolean eliminado = usuariosRepository.deleteUsuario(idUsuario);
+            if (!eliminado) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se ha podido eliminar el usuario");
+            }
+
+            return ResponseEntity.noContent()
+                    .build();
+        } catch (Exception e) {
+            log.error("Error inesperado al eliminar el usuario", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    private boolean esUnicoAdminGeneral(UsuarioBdDto usuarioBd) {
+        return usuarioBd.isEs_admin_general() && usuariosRepository.countAdminGeneral() == 1;
     }
 
     private boolean fotoNoCambiada(MultipartFile foto) {

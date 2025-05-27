@@ -98,6 +98,7 @@ public class GruposRepository {
                 .param(1, idUsuarioAutenticado)
                 .param(2, idGrupo)
                 .update();
+
         return filasEliminadas == 1;
     }
 
@@ -113,13 +114,11 @@ public class GruposRepository {
     public int countGruposPublicosPorNombreWhereUsuarioNoEste(String nombre, Long idUsuario) {
         String nombreBusqueda = "%" + nombre + "%";
 
-        Optional<Integer> numOptional = jdbcClient.sql("SELECT COUNT(*) FROM grupos WHERE es_privado = false AND LOWER(nombre_grupo) LIKE LOWER(?) AND id_grupo NOT IN (SELECT id_grupo FROM usuarios_grupos WHERE id_usuario = ?)")
+        return jdbcClient.sql("SELECT COUNT(*) FROM grupos WHERE es_privado = false AND LOWER(nombre_grupo) LIKE LOWER(?) AND id_grupo NOT IN (SELECT id_grupo FROM usuarios_grupos WHERE id_usuario = ?)")
                 .param(1, nombreBusqueda)
                 .param(2, idUsuario)
                 .query(Integer.class)
-                .optional();
-
-        return numOptional.orElse(0);
+                .single();
     }
 
     public List<GrupoDto> findGruposPublicosByNombreWhereUsuarioNoEste(String nombre, Long idUsuario, Pageable pageable) {

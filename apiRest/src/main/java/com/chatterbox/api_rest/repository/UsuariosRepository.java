@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,21 +16,27 @@ import java.util.Optional;
 public class UsuariosRepository {
     private final JdbcClient jdbcClient;
 
-    public int countUsuarios() {
-        Optional<Integer> numOptional = jdbcClient.sql("SELECT COUNT(*) FROM usuarios")
+    public int countUsuariosExceptoASiMismo(Long idUsuario) {
+        return jdbcClient.sql("SELECT COUNT(*) FROM usuarios WHERE id_usuario != ?")
+                .param(1, idUsuario)
                 .query(Integer.class)
-                .optional();
-
-        return numOptional.orElse(0);
+                .single();
     }
 
-    public List<UsuarioBdDto> findAllUsuarios(Pageable pageable) {
+    public int countAdminGeneral() {
+        return jdbcClient.sql("SELECT COUNT(*) FROM usuarios WHERE es_admin_general = true")
+                .query(Integer.class)
+                .single();
+    }
+
+    public List<UsuarioBdDto> findAllUsuariosExceptoASiMismo(Long idUsuario, Pageable pageable) {
         int pageSize = pageable.getPageSize();
         int offset = (int) pageable.getOffset();
 
-        return jdbcClient.sql("SELECT * FROM usuarios ORDER BY apodo LIMIT ? OFFSET ?")
-                .param(1, pageSize)
-                .param(2, offset)
+        return jdbcClient.sql("SELECT * FROM usuarios WHERE id_usuario != ? ORDER BY apodo LIMIT ? OFFSET ?")
+                .param(1, idUsuario)
+                .param(2, pageSize)
+                .param(3, offset)
                 .query(UsuarioBdDto.class)
                 .list();
     }
@@ -127,5 +134,18 @@ public class UsuariosRepository {
                 .param(5, usuarioBd.getFoto_perfil())
                 .param(6, usuarioBd.getId_usuario())
                 .update();
+    }
+
+    @Transactional
+    public boolean deleteUsuario(Long idUsuario) {
+        jdbcClient.sql("DELETE FROM usuarios_grupos WHERE id_usuario = ?")
+                .param(1, idUsuario)
+                .update();
+
+        int filasEliminadasUsuarios = jdbcClient.sql("DELETE FROM usuarios WHERE id_usuario = ?")
+                .param(1, idUsuario)
+                .update();
+
+        return filasEliminadasUsuarios == 1;
     }
 }
