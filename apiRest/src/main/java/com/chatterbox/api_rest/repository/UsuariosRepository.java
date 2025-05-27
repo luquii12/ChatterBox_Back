@@ -148,4 +148,15 @@ public class UsuariosRepository {
 
         return filasEliminadasUsuarios == 1;
     }
+
+    public void setAdminGeneral(Long idUsuario) {
+        jdbcClient.sql("UPDATE usuarios SET es_admin_general = 1 WHERE id_usuario = ?")
+                .param(1, idUsuario)
+                .update();
+    }
+
+    public boolean deleteAdminGeneral(Long idUsuario) {
+//        int filasEliminadas = jdbcClient.sql("")
+        return true;
+    }
 }

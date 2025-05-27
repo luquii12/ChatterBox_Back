@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class GruposController {
     private final GruposService gruposService;
 
+    @GetMapping("/{idGrupo}")
+    public ResponseEntity<?> getGrupoById(@PathVariable Long idGrupo) {
+        return gruposService.getGrupoById(idGrupo);
+    }
+
     @GetMapping("/publicos/disponibles")
     public ResponseEntity<?> getGruposPublicosPorNombreWhereUsuarioNoEste(@RequestParam(required = false) String nombre, @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
         return gruposService.getGruposPublicosPorNombreWhereUsuarioNoEste(nombre, pageable);

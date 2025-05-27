@@ -39,6 +39,21 @@ public class GruposService {
     @Value("${app.ruta.imagenes.grupo}")
     private String carpetaDestino;
 
+    public ResponseEntity<?> getGrupoById(Long idGrupo) {
+        try {
+            Optional<GrupoDto> grupoOptional = gruposRepository.findGrupoById(idGrupo);
+            if (grupoOptional.isPresent()) {
+                return ResponseEntity.ok(grupoOptional.get());
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el grupo buscado");
+        } catch (Exception e) {
+            log.error("Error al obtener el grupo con id {}", idGrupo);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     public ResponseEntity<?> getGruposPublicosPorNombreWhereUsuarioNoEste(String nombre, Pageable pageable) {
         if (nombre == null || nombre.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

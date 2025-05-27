@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.*;
 public class UsuariosController {
     private final UsuariosService usuariosService;
 
+    @GetMapping("/{idUsuario}")
+    public ResponseEntity<?> getUsuarioPorId(@PathVariable Long idUsuario) {
+        return usuariosService.getUsuarioById(idUsuario);
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<?> getAllUsuariosExceptoASiMismo(@PageableDefault(size = 10, sort = "apodo") Pageable pageable) {
         return usuariosService.getAllUsuariosExceptoASiMismo(pageable);
-    }
-
-    @GetMapping("/{idUsuario}")
-    public ResponseEntity<?> getUsuarioPorId(@PathVariable Long idUsuario) {
-        return usuariosService.getUsuarioById(idUsuario);
     }
 
     @GetMapping("/{idUsuario}/grupos")
@@ -42,12 +42,10 @@ public class UsuariosController {
         return usuariosService.editUsuario(idUsuario, usuarioModificado);
     }
 
-    // Dar/Quitar permisos admin
     @PutMapping("/{idUsuario}/roles/ADMIN_GENERAL")
     @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<?> setAdminGeneral(@PathVariable Long idUsuario) {
-//        return usuariosService.setAdminGeneral(idUsuario);
-        return null;
+        return usuariosService.setAdminGeneral(idUsuario);
     }
 
     @DeleteMapping("/{idUsuario}")
@@ -59,6 +57,6 @@ public class UsuariosController {
     @DeleteMapping("/{idUsuario}/roles/ADMIN_GENERAL")
     @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<?> deleteAdminGeneral(@PathVariable Long idUsuario) {
-        return null;
+        return usuariosService.deleteAdminGeneral(idUsuario);
     }
 }

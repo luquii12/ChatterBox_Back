@@ -41,6 +41,21 @@ public class UsuariosService {
     @Value("${app.ruta.imagenes.perfil}")
     private String carpetaDestino;
 
+    public ResponseEntity<?> getUsuarioById(Long idUsuario) {
+        try {
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
+            if (usuarioOptional.isPresent()) {
+                return ResponseEntity.ok(modelMapper.map(usuarioOptional.get(), UsuarioResponseDto.class));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el usuario buscado");
+        } catch (Exception e) {
+            log.error("Error al obtener el usuario con id {}", idUsuario);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     public ResponseEntity<?> getAllUsuariosExceptoASiMismo(Pageable pageable) {
         Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
         if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
@@ -64,21 +79,6 @@ public class UsuariosService {
             return ResponseEntity.ok(page);
         } catch (Exception e) {
             log.error("Error inesperado durante la búsqueda de los usuarios de la app", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno del servidor");
-        }
-    }
-
-    public ResponseEntity<?> getUsuarioById(Long idUsuario) {
-        try {
-            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
-            if (usuarioOptional.isPresent()) {
-                return ResponseEntity.ok(modelMapper.map(usuarioOptional.get(), UsuarioResponseDto.class));
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("No existe el usuario buscado");
-        } catch (Exception e) {
-            log.error("Error al obtener el usuario con id {}", idUsuario);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
@@ -168,6 +168,26 @@ public class UsuariosService {
         }
     }
 
+    public ResponseEntity<?> setAdminGeneral(Long idUsuario) {
+        try {
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
+            if (usuarioOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            usuariosRepository.setAdminGeneral(idUsuario);
+            UsuarioBdDto usuarioBd = usuarioOptional.get();
+            usuarioBd.setEs_admin_general(true);
+
+            return ResponseEntity.ok(modelMapper.map(usuarioBd, UsuarioResponseDto.class));
+        } catch (Exception e) {
+            log.error("Error inesperado al dar permisos de administrador general del usuario", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     public ResponseEntity<?> deleteUsuario(Long idUsuario) {
         try {
             Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
@@ -191,6 +211,36 @@ public class UsuariosService {
                     .build();
         } catch (Exception e) {
             log.error("Error inesperado al eliminar el usuario", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    public ResponseEntity<?> deleteAdminGeneral(Long idUsuario) {
+        try {
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
+            if (usuarioOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            UsuarioBdDto usuarioBd = usuarioOptional.get();
+
+            if (esUnicoAdminGeneral(usuarioBd)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se pueden quitar permisos de administrador general al usuario");
+            }
+
+            boolean permisosQuitados = usuariosRepository.deleteAdminGeneral(idUsuario);
+            if (!permisosQuitados) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se ha podido quitar permisos de administrador general al usuario");
+            }
+            usuarioBd.setEs_admin_general(false);
+
+            return ResponseEntity.ok(modelMapper.map(usuarioBd, UsuarioResponseDto.class));
+        } catch (Exception e) {
+            log.error("Error inesperado al eliminar permisos de administrador general al usuario", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
