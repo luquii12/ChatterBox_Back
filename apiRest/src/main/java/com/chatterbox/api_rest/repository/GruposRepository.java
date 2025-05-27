@@ -162,4 +162,18 @@ public class GruposRepository {
                 .query(String.class)
                 .single();
     }
+
+    public int countUsuariosGrupo(Long idGrupo) {
+        return jdbcClient.sql("SELECT COUNT(*) FROM grupos WHERE id_grupo = ?")
+                .param(1, idGrupo)
+                .query(Integer.class)
+                .single();
+    }
+
+    public int countAdminGrupo(Long idGrupo) {
+        return jdbcClient.sql("SELECT COUNT(*) FROM usuarios_grupos WHERE id_grupo = ? AND es_admin_grupo = true")
+                .param(1, idGrupo)
+                .query(Integer.class)
+                .single();
+    }
 }

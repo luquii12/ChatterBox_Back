@@ -225,7 +225,6 @@ public class UsuariosService {
             }
 
             UsuarioBdDto usuarioBd = usuarioOptional.get();
-
             if (esUnicoAdminGeneral(usuarioBd)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("No se pueden quitar permisos de administrador general al usuario");

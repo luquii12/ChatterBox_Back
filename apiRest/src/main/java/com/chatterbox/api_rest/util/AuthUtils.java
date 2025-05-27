@@ -30,6 +30,6 @@ public class AuthUtils {
     }
 
     public boolean esAdminGrupo(Long idUsuario, Long idGrupo) {
-        return usuariosRepository.findIfUsuarioIsAdminGrupoByIdUsuario(idUsuario, idGrupo);
+        return usuariosRepository.usuarioIsAdminGrupo(idUsuario, idGrupo);
     }
 }

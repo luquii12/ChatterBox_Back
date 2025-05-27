@@ -5,6 +5,7 @@ import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoEditDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import com.chatterbox.api_rest.repository.GruposRepository;
+import com.chatterbox.api_rest.repository.UsuariosRepository;
 import com.chatterbox.api_rest.util.AuthUtils;
 import com.chatterbox.api_rest.util.ImgUtils;
 import com.chatterbox.api_rest.util.ValidacionUtils;
@@ -35,6 +36,7 @@ public class GruposService {
     private final GruposRepository gruposRepository;
     private final AuthUtils authUtils;
     private final ModelMapper modelMapper;
+    private final UsuariosRepository usuariosRepository;
 
     @Value("${app.ruta.imagenes.grupo}")
     private String carpetaDestino;
@@ -275,8 +277,17 @@ public class GruposService {
                         .body("No se ha podido abandonar el grupo");
             }
 
-            // Si es el último admin hay que asignar al usuario más longevo como admin
-            // Si es el último usuario del grupo se elimina el grupo
+            if (esUnicoAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                // Asignar admin usuario más longevo
+            }
+
+            if (ultimoUsuarioGrupo(idGrupo)) {
+                boolean grupoEliminado = gruposRepository.deleteGrupo(idGrupo);
+                if (!grupoEliminado) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("No se ha podido eliminar el grupo");
+                }
+            }
 
             return ResponseEntity.ok("Abandonado el grupo exitosamente");
         } catch (Exception e) {
@@ -316,5 +327,14 @@ public class GruposService {
 
     private boolean noHayFotoNueva(MultipartFile foto) {
         return foto == null || foto.isEmpty();
+    }
+
+
+    private boolean esUnicoAdminGrupo(Long idUsuario, Long idGrupo) {
+        return usuariosRepository.usuarioIsAdminGrupo(idUsuario, idGrupo) && gruposRepository.countAdminGrupo(idGrupo) == 1;
+    }
+
+    private boolean ultimoUsuarioGrupo(Long idGrupo) {
+        return gruposRepository.countUsuariosGrupo(idGrupo) == 1;
     }
 }

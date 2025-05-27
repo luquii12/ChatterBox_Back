@@ -71,13 +71,13 @@ public class UsuariosRepository {
                 .optional();
     }
 
-    public boolean findIfUsuarioIsAdminGrupoByIdUsuario(Long idUsuario, Long idGrupo) {
-        Optional<Boolean> esAdminOptional = jdbcClient.sql("SELECT es_admin_grupo FROM usuarios_grupos WHERE id_usuario = ? AND id_grupo = ?")
+    public boolean usuarioIsAdminGrupo(Long idUsuario, Long idGrupo) {
+        return jdbcClient.sql("SELECT es_admin_grupo FROM usuarios_grupos WHERE id_usuario = ? AND id_grupo = ?")
                 .param(1, idUsuario)
                 .param(2, idGrupo)
                 .query(Boolean.class)
-                .optional();
-        return esAdminOptional.orElse(false);
+                .optional()
+                .orElse(false);
     }
 
     public Long insertUsuario(UsuarioBdDto nuevoUsuario) {
@@ -150,13 +150,16 @@ public class UsuariosRepository {
     }
 
     public void setAdminGeneral(Long idUsuario) {
-        jdbcClient.sql("UPDATE usuarios SET es_admin_general = 1 WHERE id_usuario = ?")
+        jdbcClient.sql("UPDATE usuarios SET es_admin_general = true WHERE id_usuario = ?")
                 .param(1, idUsuario)
                 .update();
     }
 
     public boolean deleteAdminGeneral(Long idUsuario) {
-//        int filasEliminadas = jdbcClient.sql("")
-        return true;
+        int filasActualizadas = jdbcClient.sql("UPDATE usuarios SET es_admin_general = false WHERE id_usuario = ?")
+                .param(1, idUsuario)
+                .update();
+
+        return filasActualizadas == 1;
     }
 }
