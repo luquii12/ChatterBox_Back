@@ -162,4 +162,22 @@ public class UsuariosRepository {
 
         return filasActualizadas == 1;
     }
+
+    @Transactional
+    public UsuarioBdDto setAdminGrupoUsuarioMasLongevo(Long idGrupo) {
+        Long idUsuario = jdbcClient.sql("SELECT id_usuario FROM usuarios_grupos WHERE id_grupo = ? ORDER BY fecha_inscripcion LIMIT 1")
+                .param(1, idGrupo)
+                .query(Long.class)
+                .single();
+
+        jdbcClient.sql("UPDATE usuarios_grupos SET es_admin_grupo = true WHERE id_usuario = ? AND id_grupo = ?")
+                .param(1, idUsuario)
+                .param(2, idGrupo)
+                .update();
+
+        return jdbcClient.sql("SELECT * FROM usuarios WHERE id_usuario = ?")
+                .param(1, idUsuario)
+                .query(UsuarioBdDto.class)
+                .single();
+    }
 }

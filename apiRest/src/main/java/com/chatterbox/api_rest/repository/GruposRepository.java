@@ -164,7 +164,7 @@ public class GruposRepository {
     }
 
     public int countUsuariosGrupo(Long idGrupo) {
-        return jdbcClient.sql("SELECT COUNT(*) FROM grupos WHERE id_grupo = ?")
+        return jdbcClient.sql("SELECT COUNT(*) FROM usuarios_grupos WHERE id_grupo = ?")
                 .param(1, idGrupo)
                 .query(Integer.class)
                 .single();

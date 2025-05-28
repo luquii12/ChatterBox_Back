@@ -3,6 +3,7 @@ package com.chatterbox.api_rest.service;
 import com.chatterbox.api_rest.dto.grupo.ChatDeUnGrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoEditDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import com.chatterbox.api_rest.repository.GruposRepository;
 import com.chatterbox.api_rest.repository.UsuariosRepository;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -271,14 +273,11 @@ public class GruposService {
                         .body("El usuario no pertenece al grupo");
             }
 
+            boolean esAdmin = usuariosRepository.usuarioIsAdminGrupo(idUsuarioAutenticado, idGrupo);
             boolean eliminado = gruposRepository.deleteUsuarioDelGrupo(idGrupo, idUsuarioAutenticado);
             if (!eliminado) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("No se ha podido abandonar el grupo");
-            }
-
-            if (esUnicoAdminGrupo(idUsuarioAutenticado, idGrupo)) {
-                // Asignar admin usuario más longevo
             }
 
             if (ultimoUsuarioGrupo(idGrupo)) {
@@ -287,6 +286,12 @@ public class GruposService {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body("No se ha podido eliminar el grupo");
                 }
+                return ResponseEntity.ok("Abandonado el grupo y grupo eliminado porque no quedan usuarios");
+            }
+
+            if (esAdmin && gruposRepository.countAdminGrupo(idGrupo) == 0) {
+                UsuarioBdDto nuevoAdmin = usuariosRepository.setAdminGrupoUsuarioMasLongevo(idGrupo);
+                return ResponseEntity.ok(Map.of("mensaje", "Abandonado el grupo exitosamente", "nuevoAdmin", nuevoAdmin));
             }
 
             return ResponseEntity.ok("Abandonado el grupo exitosamente");
@@ -329,12 +334,7 @@ public class GruposService {
         return foto == null || foto.isEmpty();
     }
 
-
-    private boolean esUnicoAdminGrupo(Long idUsuario, Long idGrupo) {
-        return usuariosRepository.usuarioIsAdminGrupo(idUsuario, idGrupo) && gruposRepository.countAdminGrupo(idGrupo) == 1;
-    }
-
     private boolean ultimoUsuarioGrupo(Long idGrupo) {
-        return gruposRepository.countUsuariosGrupo(idGrupo) == 1;
+        return gruposRepository.countUsuariosGrupo(idGrupo) == 0;
     }
 }
