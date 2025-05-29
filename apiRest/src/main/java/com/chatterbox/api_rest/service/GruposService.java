@@ -82,6 +82,33 @@ public class GruposService {
         }
     }
 
+    public ResponseEntity<?> getAllUsuariosGrupoExceptoASiMismo(Long idGrupo, Pageable pageable) {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            int total = gruposRepository.countUsuariosGrupoExceptoASiMismo(idGrupo, idUsuarioAutenticado);
+            if(total == 0) {
+                return ResponseEntity.noContent().build();
+            }
+
+            // Resto
+        } catch (Exception e) {
+            log.error("Error inesperado durante la búsqueda de los usuarios del grupo", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+        return null;
+    }
+
     public ResponseEntity<?> getChatsDeUnGrupo(Long idGrupo) {
         try {
             Optional<GrupoDto> grupoOptional = gruposRepository.findGrupoById(idGrupo);

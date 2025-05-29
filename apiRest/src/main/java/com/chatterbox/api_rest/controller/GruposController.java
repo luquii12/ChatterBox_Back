@@ -25,6 +25,11 @@ public class GruposController {
         return gruposService.getGruposPublicosPorNombreWhereUsuarioNoEste(nombre, pageable);
     }
 
+    @GetMapping("/{idGrupo}/usuarios")
+    public ResponseEntity<?> getAllUsuariosGrupoExceptoASiMismo(@PathVariable Long idGrupo, @PageableDefault(size = 10, sort = "apodo") Pageable pageable) {
+        return gruposService.getAllUsuariosGrupoExceptoASiMismo(idGrupo, pageable);
+    }
+
     @GetMapping("/{idGrupo}/chats")
     public ResponseEntity<?> getChatsDeUnGrupo(@PathVariable Long idGrupo) {
         return gruposService.getChatsDeUnGrupo(idGrupo);
@@ -33,11 +38,6 @@ public class GruposController {
     @GetMapping("/{idGrupo}/foto")
     public ResponseEntity<?> getFotoGrupo(@PathVariable Long idGrupo) {
         return gruposService.getFotoGrupo(idGrupo);
-    }
-
-    @GetMapping("/{idGrupo}/administradores")
-    public ResponseEntity<?> getAdministradoresDeUnGrupo(@PathVariable Long idGrupo) {
-        return null;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

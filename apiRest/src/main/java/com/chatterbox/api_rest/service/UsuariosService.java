@@ -57,13 +57,13 @@ public class UsuariosService {
     }
 
     public ResponseEntity<?> getAllUsuariosExceptoASiMismo(Pageable pageable) {
-        Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
-        if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Usuario no encontrado");
-        }
-
         try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
             int total = usuariosRepository.countUsuariosExceptoASiMismo(idUsuarioAutenticado);
             if (total == 0) {
                 return ResponseEntity.noContent()

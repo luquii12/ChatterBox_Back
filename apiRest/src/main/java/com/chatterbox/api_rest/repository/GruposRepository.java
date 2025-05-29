@@ -176,4 +176,12 @@ public class GruposRepository {
                 .query(Integer.class)
                 .single();
     }
+
+    public int countUsuariosGrupoExceptoASiMismo(Long idGrupo, Long idUsuario) {
+        return jdbcClient.sql("SELECT COUNT(*) FROM usuarios_grupos WHERE id_grupo = ? AND id_usuario != ?")
+                .param(1, idGrupo)
+                .param(2, idUsuario)
+                .query(Integer.class)
+                .single();
+    }
 }
