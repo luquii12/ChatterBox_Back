@@ -182,7 +182,7 @@ public class UsuariosService {
 
             return ResponseEntity.ok(modelMapper.map(usuarioBd, UsuarioResponseDto.class));
         } catch (Exception e) {
-            log.error("Error inesperado al dar permisos de administrador general del usuario", e);
+            log.error("Error inesperado al dar permisos de administrador general al usuario", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }

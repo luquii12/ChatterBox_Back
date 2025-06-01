@@ -5,6 +5,7 @@ import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoEditDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
+import com.chatterbox.api_rest.dto.usuario_grupo.UsuarioDelGrupoDto;
 import com.chatterbox.api_rest.repository.GruposRepository;
 import com.chatterbox.api_rest.repository.UsuariosRepository;
 import com.chatterbox.api_rest.util.AuthUtils;
@@ -96,17 +97,20 @@ public class GruposService {
             }
 
             int total = gruposRepository.countUsuariosGrupoExceptoASiMismo(idGrupo, idUsuarioAutenticado);
-            if(total == 0) {
-                return ResponseEntity.noContent().build();
+            if (total == 0) {
+                return ResponseEntity.noContent()
+                        .build();
             }
 
-            // Resto
+            List<UsuarioDelGrupoDto> usuariosGrupo = gruposRepository.findAllUsuariosGrupoExceptoASiMismo(idGrupo, idUsuarioAutenticado, pageable);
+            Page<UsuarioDelGrupoDto> page = new PageImpl<>(usuariosGrupo, pageable, total);
+
+            return ResponseEntity.ok(page);
         } catch (Exception e) {
             log.error("Error inesperado durante la búsqueda de los usuarios del grupo", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
-        return null;
     }
 
     public ResponseEntity<?> getChatsDeUnGrupo(Long idGrupo) {
@@ -287,6 +291,40 @@ public class GruposService {
         }
     }
 
+    public ResponseEntity<?> setAdminGrupo(Long idGrupo, Long idUsuario) {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
+            if (usuarioOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!gruposRepository.usuarioPerteneceAlGrupo(idUsuario, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("El usuario no pertenece al grupo");
+            }
+
+            UsuarioDelGrupoDto usuarioDelGrupo = gruposRepository.setAdminGrupo(idGrupo, idUsuario);
+
+            return ResponseEntity.ok(usuarioDelGrupo);
+        } catch (Exception e) {
+            log.error("Error inesperado al dar permisos de administrador del grupo al usuario", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     public ResponseEntity<?> leaveGrupo(Long idGrupo) {
         try {
             Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
@@ -324,6 +362,93 @@ public class GruposService {
             return ResponseEntity.ok("Abandonado el grupo exitosamente");
         } catch (Exception e) {
             log.error("Error inesperado al abandonar el grupo {}", idGrupo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    public ResponseEntity<?> deleteUsuarioDelGrupo(Long idUsuario, Long idGrupo) {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
+            if (usuarioOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!gruposRepository.usuarioPerteneceAlGrupo(idUsuario, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("El usuario no pertenece al grupo");
+            }
+
+            if (gruposRepository.usuarioIsCreadorGrupo(idUsuario, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("No se puede eliminar al creador del grupo");
+            }
+
+            boolean eliminado = gruposRepository.deleteUsuarioDelGrupo(idGrupo, idUsuario);
+            if (!eliminado) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se ha podido eliminar el usuario del grupo");
+            }
+
+            return ResponseEntity.noContent()
+                    .build();
+        } catch (Exception e) {
+            log.error("Error inesperado al eliminar el usuario {} del grupo {}", idUsuario, idGrupo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    public ResponseEntity<?> deleteAdminGrupo(Long idGrupo, Long idUsuario) {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            Optional<UsuarioBdDto> usuarioOptional = usuariosRepository.findUsuarioById(idUsuario);
+            if (usuarioOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!gruposRepository.usuarioPerteneceAlGrupo(idUsuario, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("El usuario no pertenece al grupo");
+            }
+
+            if (gruposRepository.usuarioIsCreadorGrupo(idUsuario, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("No se puede eliminar al creador del grupo");
+            }
+
+            UsuarioDelGrupoDto usuarioDelGrupo = gruposRepository.deleteAdminGrupo(idGrupo, idUsuario);
+            if (usuarioDelGrupo.isEs_admin_grupo()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se ha podido quitar permisos de administrador del grupo al usuario");
+            }
+
+            return ResponseEntity.ok(usuarioDelGrupo);
+        } catch (Exception e) {
+            log.error("Error inesperado al eliminar permisos de administrador del grupo al usuario", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }

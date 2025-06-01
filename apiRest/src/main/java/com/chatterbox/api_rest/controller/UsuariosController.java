@@ -42,7 +42,7 @@ public class UsuariosController {
         return usuariosService.editUsuario(idUsuario, usuarioModificado);
     }
 
-    @PutMapping("/{idUsuario}/roles/ADMIN_GENERAL")
+    @PutMapping("/{idUsuario}/roles/admin_general")
     @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<?> setAdminGeneral(@PathVariable Long idUsuario) {
         return usuariosService.setAdminGeneral(idUsuario);
@@ -54,7 +54,7 @@ public class UsuariosController {
         return usuariosService.deleteUsuario(idUsuario);
     }
 
-    @DeleteMapping("/{idUsuario}/roles/ADMIN_GENERAL")
+    @DeleteMapping("/{idUsuario}/roles/admin_general")
     @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<?> deleteAdminGeneral(@PathVariable Long idUsuario) {
         return usuariosService.deleteAdminGeneral(idUsuario);

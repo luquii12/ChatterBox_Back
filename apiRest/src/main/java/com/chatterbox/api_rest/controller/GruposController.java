@@ -55,9 +55,24 @@ public class GruposController {
         return gruposService.editGrupo(idGrupo, grupoModificado);
     }
 
+    @PutMapping("/{idGrupo}/usuarios/{idUsuario}/roles/admin_grupo")
+    public ResponseEntity<?> setAdminGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
+        return gruposService.setAdminGrupo(idGrupo,idUsuario);
+    }
+
     @DeleteMapping("/{idGrupo}/leave")
     public ResponseEntity<?> leaveGrupo(@PathVariable Long idGrupo) {
         return gruposService.leaveGrupo(idGrupo);
+    }
+
+    @DeleteMapping("/{idGrupo}/usuarios/{idUsuario}")
+    public ResponseEntity<?> deleteUsuarioDelGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
+        return gruposService.deleteUsuarioDelGrupo(idUsuario, idGrupo);
+    }
+
+    @DeleteMapping("/{idGrupo}/usuarios/{idUsuario}/roles/admin_grupo")
+    public ResponseEntity<?> deleteAdminGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
+        return gruposService.deleteAdminGrupo(idGrupo,idUsuario);
     }
 
     @DeleteMapping("/{idGrupo}")

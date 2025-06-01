@@ -3,6 +3,7 @@ package com.chatterbox.api_rest.repository;
 import com.chatterbox.api_rest.dto.grupo.ChatDeUnGrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoEditDto;
+import com.chatterbox.api_rest.dto.usuario_grupo.UsuarioDelGrupoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -93,18 +94,18 @@ public class GruposRepository {
                 .update();
     }
 
-    public boolean deleteUsuarioDelGrupo(Long idGrupo, Long idUsuarioAutenticado) {
+    public boolean deleteUsuarioDelGrupo(Long idGrupo, Long idUsuario) {
         int filasEliminadas = jdbcClient.sql("DELETE FROM usuarios_grupos WHERE id_usuario = ? AND id_grupo = ?")
-                .param(1, idUsuarioAutenticado)
+                .param(1, idUsuario)
                 .param(2, idGrupo)
                 .update();
 
         return filasEliminadas == 1;
     }
 
-    public boolean usuarioPerteneceAlGrupo(Long idUsuarioAutenticado, Long idGrupo) {
+    public boolean usuarioPerteneceAlGrupo(Long idUsuario, Long idGrupo) {
         return jdbcClient.sql("SELECT 1 FROM usuarios_grupos WHERE id_usuario = ? AND id_grupo = ?")
-                .param(1, idUsuarioAutenticado)
+                .param(1, idUsuario)
                 .param(2, idGrupo)
                 .query(Integer.class)
                 .optional()
@@ -182,6 +183,56 @@ public class GruposRepository {
                 .param(1, idGrupo)
                 .param(2, idUsuario)
                 .query(Integer.class)
+                .single();
+    }
+
+    public List<UsuarioDelGrupoDto> findAllUsuariosGrupoExceptoASiMismo(Long idGrupo, Long idUsuario, Pageable pageable) {
+        int pageSize = pageable.getPageSize();
+        int offset = (int) pageable.getOffset();
+
+        return jdbcClient.sql("SELECT u.*, ug.id_grupo, ug.es_admin_grupo, ug.fecha_inscripcion FROM usuarios u JOIN usuarios_grupos ug ON u.id_usuario = ug.id_usuario WHERE u.id_usuario != ? AND ug.id_grupo = ? ORDER BY u.apodo LIMIT ? OFFSET ?")
+                .param(1, idUsuario)
+                .param(2, idGrupo)
+                .param(3, pageSize)
+                .param(4, offset)
+                .query(UsuarioDelGrupoDto.class)
+                .list();
+    }
+
+    public boolean usuarioIsCreadorGrupo(Long idUsuario, Long idGrupo) {
+        return jdbcClient.sql("SELECT 1 FROM grupos WHERE id_grupo = ? AND id_usuario_creador = ?")
+                .param(1, idGrupo)
+                .param(2, idUsuario)
+                .query(Integer.class)
+                .optional()
+                .isPresent();
+    }
+
+    @Transactional
+    public UsuarioDelGrupoDto setAdminGrupo(Long idGrupo, Long idUsuario) {
+        jdbcClient.sql("UPDATE usuarios_grupos SET es_admin_grupo = true WHERE id_grupo = ? AND id_usuario = ?")
+                .param(1, idGrupo)
+                .param(2, idUsuario)
+                .update();
+
+        return jdbcClient.sql("SELECT u.*, ug.id_grupo, ug.es_admin_grupo, ug.fecha_inscripcion FROM usuarios u JOIN usuarios_grupos ug ON u.id_usuario = ug.id_usuario WHERE u.id_usuario = ? AND ug.id_grupo = ?")
+                .param(1, idUsuario)
+                .param(2, idGrupo)
+                .query(UsuarioDelGrupoDto.class)
+                .single();
+    }
+
+    @Transactional
+    public UsuarioDelGrupoDto deleteAdminGrupo(Long idGrupo, Long idUsuario) {
+        jdbcClient.sql("UPDATE usuarios_grupos SET es_admin_grupo = false WHERE id_grupo = ? AND id_usuario = ?")
+                .param(1, idGrupo)
+                .param(2, idUsuario)
+                .update();
+
+        return jdbcClient.sql("SELECT u.*, ug.id_grupo, ug.es_admin_grupo, ug.fecha_inscripcion FROM usuarios u JOIN usuarios_grupos ug ON u.id_usuario = ug.id_usuario WHERE u.id_usuario = ? AND ug.id_grupo = ?")
+                .param(1, idUsuario)
+                .param(2, idGrupo)
+                .query(UsuarioDelGrupoDto.class)
                 .single();
     }
 }
