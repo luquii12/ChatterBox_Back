@@ -30,6 +30,11 @@ public class GruposController {
         return gruposService.getAllUsuariosGrupoExceptoASiMismo(idGrupo, pageable);
     }
 
+    @GetMapping("/{idGrupo}/usuarios/disponibles")
+    public ResponseEntity<?> getAllUsuariosNotInGrupo(@PathVariable Long idGrupo, @RequestParam(required = false) String apodo, @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        return gruposService.getAllUsuariosNotInGrupo(idGrupo, apodo, pageable);
+    }
+
     @GetMapping("/{idGrupo}/chats")
     public ResponseEntity<?> getChatsDeUnGrupo(@PathVariable Long idGrupo) {
         return gruposService.getChatsDeUnGrupo(idGrupo);
@@ -50,6 +55,11 @@ public class GruposController {
         return gruposService.joinGrupo(idGrupo);
     }
 
+    @PostMapping("/{idGrupo}/usuarios/{idUsuario}/add")
+    public ResponseEntity<?> addUsuarioGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
+        return gruposService.addUsuarioGrupo(idGrupo, idUsuario);
+    }
+
     @PutMapping(value = "/{idGrupo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> editGrupo(@PathVariable Long idGrupo, @ModelAttribute GrupoEditDto grupoModificado) {
         return gruposService.editGrupo(idGrupo, grupoModificado);
@@ -57,7 +67,7 @@ public class GruposController {
 
     @PutMapping("/{idGrupo}/usuarios/{idUsuario}/roles/admin_grupo")
     public ResponseEntity<?> setAdminGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
-        return gruposService.setAdminGrupo(idGrupo,idUsuario);
+        return gruposService.setAdminGrupo(idGrupo, idUsuario);
     }
 
     @DeleteMapping("/{idGrupo}/leave")
@@ -72,7 +82,7 @@ public class GruposController {
 
     @DeleteMapping("/{idGrupo}/usuarios/{idUsuario}/roles/admin_grupo")
     public ResponseEntity<?> deleteAdminGrupo(@PathVariable Long idGrupo, @PathVariable Long idUsuario) {
-        return gruposService.deleteAdminGrupo(idGrupo,idUsuario);
+        return gruposService.deleteAdminGrupo(idGrupo, idUsuario);
     }
 
     @DeleteMapping("/{idGrupo}")

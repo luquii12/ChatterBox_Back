@@ -4,6 +4,7 @@ import com.chatterbox.api_rest.dto.grupo.ChatDeUnGrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoEditDto;
 import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioResponseDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.GrupoDelUsuarioDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.UsuarioDelGrupoDto;
 import com.chatterbox.api_rest.repository.GruposRepository;
@@ -113,6 +114,44 @@ public class GruposService {
         }
     }
 
+    public ResponseEntity<?> getAllUsuariosNotInGrupo(Long idGrupo, String apodo, Pageable pageable) {
+        if (apodo == null || apodo.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Falta el apodo del usuario");
+        }
+
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            int total = gruposRepository.countUsuariosByNombreNotInGrupo(apodo, idGrupo);
+            if (total == 0) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("No existen usuarios disponibles para añadir al grupo");
+            }
+
+            List<UsuarioBdDto> usuariosBd = gruposRepository.findAllUsuariosNotInGrupo(apodo, idGrupo, pageable);
+            List<UsuarioResponseDto> usuariosDisponibles = usuariosBd.stream()
+                    .map(u -> modelMapper.map(u, UsuarioResponseDto.class))
+                    .toList();
+            Page<UsuarioResponseDto> page = new PageImpl<>(usuariosDisponibles, pageable, total);
+
+            return ResponseEntity.ok(page);
+        } catch (Exception e) {
+            log.error("Error inesperado durante la búsqueda de los usuarios que no están en el grupo", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
     public ResponseEntity<?> getChatsDeUnGrupo(Long idGrupo) {
         try {
             Optional<GrupoDto> grupoOptional = gruposRepository.findGrupoById(idGrupo);
@@ -213,7 +252,6 @@ public class GruposService {
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             String fechaFormateada = fechaActual.format(formatter);
-            // Falta rellenar el dto
             GrupoDto grupo = grupoOptional.get();
             GrupoDelUsuarioDto nuevoGrupoDelUsuario = modelMapper.map(grupo, GrupoDelUsuarioDto.class);
             nuevoGrupoDelUsuario.setFecha_inscripcion(fechaFormateada);
@@ -221,6 +259,46 @@ public class GruposService {
             return ResponseEntity.ok(nuevoGrupoDelUsuario);
         } catch (Exception e) {
             log.error("Error inesperado al unirse al grupo {}", idGrupo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    public ResponseEntity<?> addUsuarioGrupo(Long idGrupo, Long idUsuario) {
+        try {
+            Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
+            if (authUtils.usuarioNoEncontrado(idUsuarioAutenticado)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado");
+            }
+
+            if (!authUtils.esAdminGrupo(idUsuarioAutenticado, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("El usuario no es administrador del grupo");
+            }
+
+            if (gruposRepository.usuarioPerteneceAlGrupo(idUsuario, idGrupo)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("El usuario ya pertenece al grupo");
+            }
+
+            LocalDateTime fechaActual = LocalDateTime.now();
+            gruposRepository.insertUsuarioGrupo(idUsuario, idGrupo, fechaActual);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String fechaFormateada = fechaActual.format(formatter);
+            Optional<GrupoDto> grupoOptional = gruposRepository.findGrupoById(idGrupo);
+            if (grupoOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Grupo no encontrado");
+            }
+            GrupoDto grupo = grupoOptional.get();
+            GrupoDelUsuarioDto nuevoGrupoDelUsuario = modelMapper.map(grupo, GrupoDelUsuarioDto.class);
+            nuevoGrupoDelUsuario.setFecha_inscripcion(fechaFormateada);
+
+            return ResponseEntity.ok(nuevoGrupoDelUsuario);
+        } catch (Exception e) {
+            log.error("Error inesperado al añadir el usuario {} al grupo {}", idUsuario, idGrupo, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
