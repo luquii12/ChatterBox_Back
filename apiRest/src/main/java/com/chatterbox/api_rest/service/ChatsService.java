@@ -63,16 +63,6 @@ public class ChatsService {
         }
     }
 
-    public boolean usuarioEsMiembroDelChat(Long idUsuario, Long idChat) {
-        try {
-            Optional<UsuarioBdDto> usuarioBdOptional = usuariosRepository.findUsuarioByIdAndChatId(idUsuario, idChat);
-            return usuarioBdOptional.isPresent();
-        } catch (Exception e) {
-            log.error("Error al verificar si el usuario {} pertenece al chat {}: {}", idUsuario, idChat, e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
     public ResponseEntity<?> createChat(ChatDto nuevoChat) {
         try {
             Long idUsuarioAutenticado = authUtils.obtenerIdDelToken();
@@ -140,6 +130,16 @@ public class ChatsService {
             log.error("Error inesperado al eliminar el chat", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
+        }
+    }
+
+    public boolean usuarioEsMiembroDelChat(Long idUsuario, Long idChat) {
+        try {
+            Optional<UsuarioBdDto> usuarioBdOptional = usuariosRepository.findUsuarioByIdAndChatId(idUsuario, idChat);
+            return usuarioBdOptional.isPresent();
+        } catch (Exception e) {
+            log.error("Error al verificar si el usuario {} pertenece al chat {}: {}", idUsuario, idChat, e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 }
