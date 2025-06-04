@@ -10,8 +10,8 @@ VALUES ('lucasDev', 'Lucas', 'lucas@example.com', '$2a$10$q/pAQNTBCg.4tUfYVrb0xe
 
 -- Grupos
 INSERT INTO grupos (id_usuario_creador, descripcion, nombre_grupo, es_privado, foto_grupo)
-VALUES (1, 'Grupo de pruebas de Lucas', 'DevTalks', FALSE, NULL),
-       (2, 'Grupo de Ana sobre IA', 'AI Lovers', TRUE, NULL);
+VALUES (1, 'Grupo de pruebas de Lucas', 'DevTalks', FALSE, 'grupo_1_1747912238225.png'),
+       (2, 'Grupo de Ana sobre IA', 'AI Lovers', TRUE, 'grupo_2_1747917325657.jpg');
 
 -- Chats
 INSERT INTO chats (id_grupo, nombre_chat, fecha_creacion)
