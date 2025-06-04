@@ -3,6 +3,7 @@ package com.chatterbox.api_rest.repository;
 import com.chatterbox.api_rest.dto.grupo.ChatDeUnGrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoDto;
 import com.chatterbox.api_rest.dto.grupo.GrupoEditDto;
+import com.chatterbox.api_rest.dto.usuario.UsuarioBdDto;
 import com.chatterbox.api_rest.dto.usuario_grupo.UsuarioDelGrupoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -234,5 +235,29 @@ public class GruposRepository {
                 .param(2, idGrupo)
                 .query(UsuarioDelGrupoDto.class)
                 .single();
+    }
+
+    public int countUsuariosByNombreNotInGrupo(String apodo, Long idGrupo) {
+        String apodoBusqueda = "%" + apodo + "%";
+
+        return jdbcClient.sql("SELECT COUNT(*) FROM usuarios WHERE LOWER(apodo) LIKE LOWER(?) AND id_usuario NOT IN (SELECT id_usuario FROM usuarios_grupos WHERE id_grupo = ?)")
+                .param(1, apodoBusqueda)
+                .param(2, idGrupo)
+                .query(Integer.class)
+                .single();
+    }
+
+    public List<UsuarioBdDto> findAllUsuariosNotInGrupo(String apodo, Long idGrupo, Pageable pageable) {
+        int pageSize = pageable.getPageSize();
+        int offset = (int) pageable.getOffset();
+        String apodoBusqueda = "%" + apodo + "%";
+
+        return jdbcClient.sql("SELECT * FROM usuarios WHERE LOWER(apodo) LIKE LOWER(?) AND id_usuario NOT IN (SELECT id_usuario FROM usuarios_grupos WHERE id_grupo = ?) ORDER BY apodo LIMIT ? OFFSET ?")
+                .param(1, apodoBusqueda)
+                .param(2, idGrupo)
+                .param(3, pageSize)
+                .param(4, offset)
+                .query(UsuarioBdDto.class)
+                .list();
     }
 }
